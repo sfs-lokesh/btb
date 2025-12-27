@@ -4,6 +4,8 @@ import Ticket from '@/models/Ticket';
 import { generateQRCodeDataURL } from '@/lib/qrcode';
 import { redirect } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 export default async function TicketPage() {
     const user = await getServerUser();
 
