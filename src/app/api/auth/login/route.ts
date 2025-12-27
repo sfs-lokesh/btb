@@ -53,7 +53,7 @@ export async function POST(req: Request) {
       sameSite: 'lax',
     });
 
-    // Remove password
+    // Remove passwor
     const userObj = user.toObject();
     delete userObj.password;
 
