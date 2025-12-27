@@ -14,6 +14,7 @@ import { useContext } from 'react';
 import { PitchContext } from '@/context/PitchContext';
 import { PitchCard } from '@/components/pitch-card';
 import { Logo } from '@/components/logo';
+import { safeLocalStorage } from '@/lib/utils';
 
 export default function UserDashboard() {
     const router = useRouter();
@@ -30,7 +31,7 @@ export default function UserDashboard() {
 
     const fetchUser = async () => {
         try {
-            const token = localStorage.getItem('token');
+            const token = safeLocalStorage.getItem('token');
             if (!token) {
                 router.push('/login');
                 return;
@@ -47,7 +48,7 @@ export default function UserDashboard() {
                 setUser(data.user);
                 setFormData(data.user);
             } else {
-                localStorage.removeItem('token');
+                safeLocalStorage.removeItem('token');
                 router.push('/login');
             }
         } catch (error) {
@@ -60,7 +61,7 @@ export default function UserDashboard() {
     const handleUpdate = async () => {
         setUpdating(true);
         try {
-            const token = localStorage.getItem('token');
+            const token = safeLocalStorage.getItem('token');
             const res = await fetch('/api/auth/me', {
                 method: 'PATCH',
                 headers: {
@@ -87,7 +88,7 @@ export default function UserDashboard() {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
+        safeLocalStorage.removeItem('token');
         router.push('/login');
     };
 

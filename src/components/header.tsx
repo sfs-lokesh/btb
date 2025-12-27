@@ -21,9 +21,17 @@ export function Header() {
   }
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      setIsUserAuthenticated(true);
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        if (typeof window.localStorage.getItem === 'function') {
+          const token = window.localStorage.getItem('token');
+          if (token) {
+            setIsUserAuthenticated(true);
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
     }
   }, [setIsUserAuthenticated]);
 

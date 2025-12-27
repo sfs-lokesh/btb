@@ -5,6 +5,8 @@ import { createContext, useState, useEffect, type ReactNode, useCallback } from 
 import { useToast } from '@/hooks/use-toast';
 import { usePathname, useRouter } from 'next/navigation';
 
+import { safeLocalStorage } from '@/lib/utils';
+
 interface LiveState {
   isLive: boolean;
   currentPitchId: string | null;
@@ -82,7 +84,7 @@ export function PitchProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   const loadUserVotes = useCallback((currentSessionId: string) => {
-    const votesFromStorage = localStorage.getItem(`userVotes_${currentSessionId}`);
+    const votesFromStorage = safeLocalStorage.getItem(`userVotes_${currentSessionId}`);
     if (votesFromStorage) {
       setUserVotes(JSON.parse(votesFromStorage));
     } else {
@@ -278,7 +280,7 @@ export function PitchProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const token = localStorage.getItem('token');
+    const token = safeLocalStorage.getItem('token');
     if (!token) {
       toast({
         title: 'Authentication Error',
@@ -296,7 +298,7 @@ export function PitchProvider({ children }: { children: ReactNode }) {
     // Update user votes state
     const newUserVotes = { ...userVotes, [pitchId]: currentUserVote === voteType ? null : voteType };
     setUserVotes(newUserVotes);
-    localStorage.setItem(`userVotes_${sessionId}`, JSON.stringify(newUserVotes));
+    safeLocalStorage.setItem(`userVotes_${sessionId}`, JSON.stringify(newUserVotes));
 
     // Update pitches state
     const updatedPitches = pitches.map(p => {
@@ -339,7 +341,7 @@ export function PitchProvider({ children }: { children: ReactNode }) {
       // Revert on failure
       setPitches(originalPitches);
       setUserVotes(originalUserVotes);
-      localStorage.setItem(`userVotes_${sessionId}`, JSON.stringify(originalUserVotes));
+      safeLocalStorage.setItem(`userVotes_${sessionId}`, JSON.stringify(originalUserVotes));
 
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       toast({

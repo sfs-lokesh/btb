@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Search, Camera, LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { safeLocalStorage } from '@/lib/utils';
 
 export default function ManagerDashboard() {
     const router = useRouter();
@@ -112,7 +113,7 @@ export default function ManagerDashboard() {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
+        safeLocalStorage.removeItem('token');
         router.push('/login');
     };
 
@@ -129,13 +130,13 @@ export default function ManagerDashboard() {
                 {/* Result Card */}
                 {scanResult && (
                     <Card className={`border-2 ${scanResult.status === 'Valid' ? 'border-green-500 bg-green-50' :
-                            scanResult.status === 'Already Scanned' ? 'border-yellow-500 bg-yellow-50' :
-                                'border-red-500 bg-red-50'
+                        scanResult.status === 'Already Scanned' ? 'border-yellow-500 bg-yellow-50' :
+                            'border-red-500 bg-red-50'
                         }`}>
                         <CardHeader>
                             <CardTitle className={`text-center text-2xl ${scanResult.status === 'Valid' ? 'text-green-700' :
-                                    scanResult.status === 'Already Scanned' ? 'text-yellow-700' :
-                                        'text-red-700'
+                                scanResult.status === 'Already Scanned' ? 'text-yellow-700' :
+                                    'text-red-700'
                                 }`}>
                                 {scanResult.status}
                             </CardTitle>

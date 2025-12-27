@@ -13,6 +13,20 @@ export const metadata: Metadata = {
   description: 'An initiative by GWD Global Pvt. Ltd., Behind the Build is a first-of-its-kind stage event designed to celebrate India’s finest freelancers, creators, and innovators.',
 };
 
+if (typeof window === 'undefined') {
+  // Polyfill localStorage for server-side
+  if (typeof global.localStorage === 'undefined' || typeof global.localStorage.getItem !== 'function') {
+    (global as any).localStorage = {
+      getItem: () => null,
+      setItem: () => { },
+      removeItem: () => { },
+      clear: () => { },
+      key: () => null,
+      length: 0,
+    };
+  }
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{

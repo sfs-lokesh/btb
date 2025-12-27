@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Loader2, Plus, Download, Edit, Eye, Pencil, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { safeLocalStorage } from '@/lib/utils';
 
 type InfluencerCoupon = {
   _id: string;
@@ -66,11 +67,29 @@ export default function AdminDashboard() {
   const [isViewUserOpen, setIsViewUserOpen] = useState(false);
 
   useEffect(() => {
-    fetchData();
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          if (['Admin', 'SuperAdmin'].indexOf(data.user.role) === -1) {
+            router.push('/login');
+          } else {
+            fetchData();
+          }
+        } else {
+          router.push('/login');
+        }
+      } catch (error) {
+        console.error('Auth check failed', error);
+        router.push('/login');
+      }
+    };
+    checkAuth();
   }, []);
 
   const getAuthHeaders = () => {
-    const token = localStorage.getItem('token');
+    const token = safeLocalStorage.getItem('token');
     return {
       'Content-Type': 'application/json',
       'Authorization': token ? `Bearer ${token}` : ''
@@ -104,7 +123,7 @@ export default function AdminDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    safeLocalStorage.removeItem('token');
     router.push('/login');
   };
 

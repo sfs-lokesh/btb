@@ -8,7 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
+
 import { useToast } from '@/hooks/use-toast';
+import { safeLocalStorage } from '@/lib/utils';
 
 export function UserLoginForm() {
   const [email, setEmail] = useState('');
@@ -36,7 +38,7 @@ export function UserLoginForm() {
         throw new Error(data.error || 'Login failed');
       }
 
-      localStorage.setItem('token', data.token);
+      safeLocalStorage.setItem('token', data.token);
 
       toast({
         title: "Login Successful",
