@@ -245,7 +245,11 @@ export default function ParticipantRegister() {
         const orderData = await orderRes.json();
 
         if (!orderData.success) {
-            alert('Could not create payment order');
+            toast({
+                title: "Payment Error",
+                description: "Could not create payment order. Please try again.",
+                variant: "destructive"
+            });
             return;
         }
 

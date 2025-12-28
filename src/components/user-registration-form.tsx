@@ -25,14 +25,14 @@ const domains = [
 ];
 
 const colleges = [
-    "VJIT (Hyderabad)",
-    "CBIT (Hyderabad)",
-    "Vasavi College of Engineering (Hyderabad)",
-    "St. Martin's Engineering College (Hyderabad)",
-    "CMR (Hyderabad)",
-    "BVRIT (Hyderabad)",
-    "Independent / Freelancer",
-    "Other",
+  "VJIT (Hyderabad)",
+  "CBIT (Hyderabad)",
+  "Vasavi College of Engineering (Hyderabad)",
+  "St. Martin's Engineering College (Hyderabad)",
+  "CMR (Hyderabad)",
+  "BVRIT (Hyderabad)",
+  "Independent / Freelancer",
+  "Other",
 ]
 
 export function UserRegistrationForm() {
@@ -46,7 +46,7 @@ export function UserRegistrationForm() {
   const [teamMembers, setTeamMembers] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [agreed, setAgreed] = useState(false);
-  
+
   const [role, setRole] = useState('Participant');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -58,32 +58,32 @@ export function UserRegistrationForm() {
     setError('');
 
     if (!agreed) {
-        setError('You must agree to the event guidelines & terms.');
-        return;
+      setError('You must agree to the event guidelines & terms.');
+      return;
     }
 
     if (password.length < 6) {
-        setError('Password must be at least 6 characters long.');
-        return;
+      setError('Password must be at least 6 characters long.');
+      return;
     }
-    
+
     setIsLoading(true);
 
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            name, 
-            email, 
-            password, 
-            role, 
-            phone,
-            college,
-            domain,
-            teamName,
-            teamMembers,
-            projectDescription
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          role,
+          phone,
+          college,
+          domain,
+          teamName,
+          teamMembers,
+          projectDescription
         }),
       });
 
@@ -134,13 +134,13 @@ export function UserRegistrationForm() {
               </div>
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="college">Select Your Shortlisting Venue / College</Label>
-                 <Select onValueChange={setCollege} defaultValue={college} required disabled={isLoading}>
-                    <SelectTrigger id="college">
-                        <SelectValue placeholder="Select your venue" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {colleges.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
+                <Select onValueChange={setCollege} defaultValue={college} required disabled={isLoading}>
+                  <SelectTrigger id="college">
+                    <SelectValue placeholder="Select your venue" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {colleges.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
                 </Select>
               </div>
               <div className="flex flex-col space-y-1.5">
@@ -149,16 +149,16 @@ export function UserRegistrationForm() {
               </div>
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="domain">Domain / Category</Label>
-                 <Select onValueChange={setDomain} value={domain} required disabled={isLoading}>
-                    <SelectTrigger id="domain">
-                        <SelectValue placeholder="Select your domain" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {domains.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
-                    </SelectContent>
+                <Select onValueChange={setDomain} value={domain} required disabled={isLoading}>
+                  <SelectTrigger id="domain">
+                    <SelectValue placeholder="Select your domain" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {domains.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                  </SelectContent>
                 </Select>
               </div>
-               <div className="md:col-span-2 flex flex-col space-y-1.5">
+              <div className="md:col-span-2 flex flex-col space-y-1.5">
                 <Label htmlFor="teamName">Team Name / Project Title</Label>
                 <Input id="teamName" placeholder="Your team or project name" value={teamName} onChange={(e) => setTeamName(e.target.value)} required disabled={isLoading} />
               </div>
@@ -185,9 +185,9 @@ export function UserRegistrationForm() {
         </CardContent>
         <CardFooter className="flex-col gap-4">
           <Button className="w-full text-lg py-6" onClick={handleSubmit} disabled={isLoading || !agreed}>
-             {isLoading ? 'Registering...' : 'Register & Proceed to Payment ₹999'}
+            {isLoading ? 'Registering...' : 'Register & Proceed to Payment'}
           </Button>
-           <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Already have an account? <Link href="/login" className="text-primary hover:underline">Log in</Link>
           </p>
         </CardFooter>

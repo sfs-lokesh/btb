@@ -46,25 +46,44 @@ export default function ManagerDashboard() {
 
     const startScanning = async () => {
         setError(null);
+
+        // check for secure context
+        if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            setError("Camera access requires HTTPS or localhost. If you are testing on mobile via IP, this will not work.");
+            return;
+        }
+
         setScanning(true);
         if (isScannerActive.current) return;
 
         try {
-            if (!scannerRef.current) {
-                scannerRef.current = new Html5Qrcode("reader");
+            // Cleanup existing instance if any
+            if (scannerRef.current) {
+                try {
+                    await scannerRef.current.clear();
+                } catch (e) { console.warn("Clear failed", e); }
             }
-            await scannerRef.current.start(
+
+            // Add a small delay to ensure DOM is ready
+            await new Promise(r => setTimeout(r, 100));
+
+            const html5QrCode = new Html5Qrcode("reader");
+            scannerRef.current = html5QrCode;
+
+            await html5QrCode.start(
                 { facingMode: "environment" },
                 { fps: 10, qrbox: { width: 250, height: 250 } },
                 onScanSuccess,
-                (err) => { /* ignore failures */ }
+                (errorMessage) => {
+                    // parse error type, ignore constant scanning errors 
+                }
             );
             isScannerActive.current = true;
         } catch (err: any) {
             console.error("Error starting scanner:", err);
             setScanning(false);
             isScannerActive.current = false;
-            setError('Failed to start camera. Please ensure you gave permission.');
+            setError(`Camera Error: ${err?.message || 'Unknown error'}. Ensure permissions are granted.`);
         }
     };
 
