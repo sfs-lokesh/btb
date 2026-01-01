@@ -81,7 +81,7 @@ export default function StallBooking() {
             });
 
             if (res.ok) {
-                alert('Stall booked successfully!');
+                alert('Enquiry for Stall Booking is Created, Our Team will Connect with you Soon');
                 setIsModalOpen(false);
                 setFormData({ firstName: '', lastName: '', contact: '', email: '' });
                 fetchStalls(); // Refresh
@@ -100,9 +100,9 @@ export default function StallBooking() {
     if (loading) return <div className="flex justify-center items-center h-screen"><Loader2 className="animate-spin" /></div>;
 
     return (
-        <div className="min-h-screen pt-24 pb-12 px-4 max-w-7xl mx-auto">
+        <div className="min-h-screen pt-28 pb-12 px-4 max-w-7xl mx-auto">
             <h1 className="text-4xl font-bold mb-2 text-foreground">Stall Booking</h1>
-            <p className="text-muted-foreground mb-8">Select a stall to view details and book. Payment is offline.</p>
+            <p className="text-muted-foreground mb-8">Select a stall to view details and book.</p>
 
             {/* Legend */}
             <div className="flex gap-6 mb-8 text-sm font-medium">
@@ -168,8 +168,7 @@ export default function StallBooking() {
                         </div>
 
                         <div className="bg-secondary/50 p-3 rounded text-sm text-muted-foreground">
-                            <p><strong>Payment Method:</strong> Offline</p>
-                            <p>Please visit the administration desk to complete payment.</p>
+                            <p>Our team will contact you for further proceedings.</p>
                         </div>
 
                         <DialogFooter>

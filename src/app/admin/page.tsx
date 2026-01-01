@@ -98,13 +98,15 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const headers = getAuthHeaders();
+      const ts = new Date().getTime();
       const [collegesRes, usersRes, couponsRes, stallsRes, ticketsRes] = await Promise.all([
-        fetch('/api/admin/college', { headers }),
-        fetch('/api/admin/reports?type=master', { headers }),
-        fetch('/api/admin/coupon', { headers }),
-        fetch('/api/stall/book', { headers }),
-        fetch('/api/admin/tickets', { headers })
+        fetch(`/api/admin/college?t=${ts}`, { headers, cache: 'no-store', next: { revalidate: 0 } }),
+        fetch(`/api/admin/reports?type=master&t=${ts}`, { headers, cache: 'no-store', next: { revalidate: 0 } }),
+        fetch(`/api/admin/coupon?t=${ts}`, { headers, cache: 'no-store', next: { revalidate: 0 } }),
+        fetch(`/api/stall/book?t=${ts}`, { headers, cache: 'no-store', next: { revalidate: 0 } }),
+        fetch(`/api/admin/tickets?t=${ts}`, { headers, cache: 'no-store', next: { revalidate: 0 } })
       ]);
 
       if (collegesRes.ok) setColleges(await collegesRes.json());
@@ -283,29 +285,40 @@ export default function AdminDashboard() {
 
   const updateStall = async () => {
     try {
-      const res = await fetch('/api/stall/update', {
-        method: 'PATCH',
+      const isNew = editingStall._id === 'new';
+      const url = isNew ? '/api/stall/create' : '/api/stall/update';
+      const method = isNew ? 'POST' : 'PATCH';
+
+      const payload = isNew ? {
+        name: editingStall.name,
+        category: editingStall.category,
+        price: editingStall.price,
+        location: 'TBD' // Add location default if required
+      } : {
+        stallId: editingStall._id,
+        updates: {
+          name: editingStall.name,
+          category: editingStall.category,
+          price: editingStall.price,
+          status: editingStall.status,
+          bookingDetails: editingStall.bookingDetails
+        }
+      };
+
+      const res = await fetch(url, {
+        method: method,
         headers: getAuthHeaders(),
-        body: JSON.stringify({
-          stallId: editingStall._id,
-          updates: {
-            name: editingStall.name,
-            category: editingStall.category,
-            price: editingStall.price,
-            status: editingStall.status,
-            bookingDetails: editingStall.bookingDetails
-          }
-        })
+        body: JSON.stringify(payload)
       });
 
       if (res.ok) {
         setIsStallEditModalOpen(false);
         setEditingStall(null);
         fetchData();
-        alert('Stall updated successfully!');
+        alert(`Stall ${isNew ? 'created' : 'updated'} successfully!`);
       } else {
         const error = await res.json();
-        alert(`Error: ${error.error}`);
+        alert(`Error: ${error.message || error.error}`);
       }
     } catch (error) {
       console.error('Error updating stall:', error);
@@ -429,6 +442,19 @@ export default function AdminDashboard() {
     }
   };
 
+  const toggleCollege = async (id: string, isActive: boolean) => {
+    try {
+      await fetch('/api/admin/college', {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ _id: id, isActive: !isActive })
+      });
+      fetchData();
+    } catch (error) {
+      console.error('Error toggling college:', error);
+    }
+  };
+
   const renderColleges = () => (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -446,7 +472,8 @@ export default function AdminDashboard() {
                 <TableHead>No.</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Registrations</TableHead>
-                <TableHead>Edit</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -456,13 +483,23 @@ export default function AdminDashboard() {
                   <TableCell className="font-medium">{college.name}</TableCell>
                   <TableCell>{college.registrations || 0}</TableCell>
                   <TableCell>
-                    <Button variant="outline" size="sm" onClick={() => handleEditCollege(college)}>
-                      <Edit className="w-4 h-4 mr-1" /> Edit
-                    </Button>
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${college.isActive !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      {college.isActive !== false ? 'Active' : 'Inactive'}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" onClick={() => toggleCollege(college._id, college.isActive !== false)}>
+                        {college.isActive !== false ? 'Deactivate' : 'Activate'}
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleEditCollege(college)}>
+                        <Edit className="w-4 h-4 mr-1" /> Edit
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
-              {colleges.length === 0 && <TableRow><TableCell colSpan={4} className="text-center py-8">No colleges found.</TableCell></TableRow>}
+              {colleges.length === 0 && <TableRow><TableCell colSpan={5} className="text-center py-8">No colleges found.</TableCell></TableRow>}
             </TableBody>
           </Table>
         </CardContent>
@@ -585,8 +622,10 @@ export default function AdminDashboard() {
                     <TableHead>Code</TableHead>
                     <TableHead>College Name</TableHead>
                     <TableHead>Discount</TableHead>
-                    <TableHead>Registrations</TableHead>
-                    <TableHead>Edit</TableHead>
+                    <TableHead>Usage</TableHead>
+                    <TableHead>Expiry</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -595,15 +634,26 @@ export default function AdminDashboard() {
                       <TableCell className="font-mono">{college.code}</TableCell>
                       <TableCell>{college.name}</TableCell>
                       <TableCell>₹{college.discountAmount}</TableCell>
-                      <TableCell>{college.registrations || 0}</TableCell>
+                      <TableCell>{college.registrations || 0} / {college.usageLimit || '∞'}</TableCell>
+                      <TableCell>{college.expiryDate ? new Date(college.expiryDate).toLocaleDateString() : 'Never'}</TableCell>
                       <TableCell>
-                        <Button variant="outline" size="sm" onClick={() => handleEditCollege(college)}>
-                          <Edit className="w-4 h-4 mr-1" /> Edit
-                        </Button>
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${college.isActive !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {college.isActive !== false ? 'Active' : 'Inactive'}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => toggleCollege(college._id, college.isActive !== false)}>
+                            {college.isActive !== false ? 'Deactivate' : 'Activate'}
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => handleEditCollege(college)}>
+                            <Edit className="w-4 h-4 mr-1" /> Edit
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
-                  {colleges.length === 0 && <TableRow><TableCell colSpan={5} className="text-center py-8">No college coupons found.</TableCell></TableRow>}
+                  {colleges.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8">No college coupons found.</TableCell></TableRow>}
                 </TableBody>
               </Table>
             </div>
@@ -615,7 +665,15 @@ export default function AdminDashboard() {
 
   const renderStalls = () => (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Stall Bookings</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h2 className="text-2xl font-bold">Stall Bookings</h2>
+        <Button onClick={() => {
+          setEditingStall({ _id: 'new', name: '', category: 'Standard', price: 10000, status: 'Available', bookingDetails: {} });
+          setIsStallEditModalOpen(true);
+        }} className="w-full sm:w-auto">
+          <Plus className="w-4 h-4 mr-2" /> Add Stall
+        </Button>
+      </div>
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -752,6 +810,7 @@ export default function AdminDashboard() {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
+                <TableHead>Category</TableHead>
                 <TableHead>Team</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>College</TableHead>
@@ -769,6 +828,7 @@ export default function AdminDashboard() {
                       {user.role}
                     </span>
                   </TableCell>
+                  <TableCell>{user.category || '-'}</TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-1">
                       <span className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-700 w-fit">
@@ -789,7 +849,7 @@ export default function AdminDashboard() {
                       {user.paymentStatus || 'N/A'}
                     </span>
                   </TableCell>
-                  <TableCell>{user.college || '-'}</TableCell>
+                  <TableCell>{user.collegeName || user.college || '-'}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button variant="ghost" size="icon" onClick={() => handleViewUser(user)} title="View Credentials">
@@ -980,6 +1040,10 @@ export default function AdminDashboard() {
       <main className="flex-1 overflow-y-auto p-8 relative z-10">
         <header className="mb-8 flex justify-between items-center">
           <div className="text-sm text-muted-foreground">Welcome back, Admin</div>
+          <Button onClick={fetchData} variant="outline" size="sm" disabled={loading}>
+            {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+            Refresh Data
+          </Button>
         </header>
 
         {activeTab === 'dashboard' && renderDashboard()}
@@ -1022,6 +1086,38 @@ export default function AdminDashboard() {
               <Input
                 value={editingCollege?.name || ''}
                 onChange={e => setEditingCollege({ ...editingCollege, name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Coupon Code</Label>
+              <Input
+                value={editingCollege?.code || ''} // Uses 'code' from model
+                onChange={e => setEditingCollege({ ...editingCollege, code: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Discount Amount (₹)</Label>
+              <Input
+                type="number"
+                value={editingCollege?.discountAmount || 0}
+                onChange={e => setEditingCollege({ ...editingCollege, discountAmount: Number(e.target.value) })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Usage Limit</Label>
+              <Input
+                type="number"
+                value={editingCollege?.usageLimit || ''}
+                onChange={e => setEditingCollege({ ...editingCollege, usageLimit: e.target.value ? Number(e.target.value) : null })}
+                placeholder="Unlimited"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Expiry Date</Label>
+              <Input
+                type="date"
+                value={editingCollege?.expiryDate ? new Date(editingCollege.expiryDate).toISOString().split('T')[0] : ''}
+                onChange={e => setEditingCollege({ ...editingCollege, expiryDate: e.target.value })}
               />
             </div>
             <Button className="w-full" onClick={updateCollege}>Update College</Button>
@@ -1152,6 +1248,35 @@ export default function AdminDashboard() {
                 disabled
               />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Category</Label>
+                <Input value={editingUser?.category || ''} onChange={e => setEditingUser({ ...editingUser, category: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Team Name</Label>
+                <Input value={editingUser?.teamName || ''} onChange={e => setEditingUser({ ...editingUser, teamName: e.target.value })} />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Team Members (Comma separated)</Label>
+              <Input
+                value={Array.isArray(editingUser?.teamMembers) ? editingUser.teamMembers.join(', ') : (editingUser?.teamMembers || '')}
+                onChange={e => setEditingUser({ ...editingUser, teamMembers: e.target.value.split(',').map((s: string) => s.trim()) })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Project Title</Label>
+              <Input value={editingUser?.projectTitle || ''} onChange={e => setEditingUser({ ...editingUser, projectTitle: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Project Links</Label>
+              <Input value={editingUser?.projectLinks || ''} onChange={e => setEditingUser({ ...editingUser, projectLinks: e.target.value })} />
+            </div>
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Input value={editingUser?.projectDescription || ''} onChange={e => setEditingUser({ ...editingUser, projectDescription: e.target.value })} />
+            </div>
             <Button className="w-full" onClick={updateUser}>Update User</Button>
           </div>
         </DialogContent>
@@ -1174,8 +1299,24 @@ export default function AdminDashboard() {
               <div><Label>Coupon Used</Label><div className="font-medium">{viewingUser.couponUsed || 'None'}</div></div>
               <div className="col-span-2"><Label>Team Members</Label>
                 <div className="flex flex-wrap gap-2 mt-1">
-                  {viewingUser.teamMembers?.map((m: any, i: number) => <span key={i} className="bg-gray-100 px-2 py-1 rounded text-sm">{m}</span>) || '-'}
+                  {viewingUser.teamMembers?.map((m: any, i: number) => <span key={i} className="bg-secondary text-secondary-foreground px-3 py-1 rounded-full text-sm">{m}</span>) || '-'}
                 </div>
+              </div>
+              <div>
+                <Label>Category</Label>
+                <div className="font-medium">{viewingUser.category || '-'}</div>
+              </div>
+              <div>
+                <Label>Project Title</Label>
+                <div className="font-medium">{viewingUser.projectTitle || '-'}</div>
+              </div>
+              <div className="col-span-2">
+                <Label>Project Description</Label>
+                <div className="text-sm mt-1">{viewingUser.projectDescription || '-'}</div>
+              </div>
+              <div>
+                <Label>Payment Amount</Label>
+                <div className="font-medium">₹{viewingUser.paymentAmount || (viewingUser.role === 'Participant' ? '129' : '0')}</div>
               </div>
               {viewingUser.projectLinks && (
                 <div className="col-span-2"><Label>Documents / Project Links</Label>

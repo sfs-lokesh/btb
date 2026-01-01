@@ -40,7 +40,7 @@ export default function RootLayout({
     },
     {
       name: "Register",
-      link: "/register",
+      link: "/register/participant",
       icon: <Users className="h-4 w-4 text-neutral-500 dark:text-white" />,
     },
     {
@@ -77,7 +77,6 @@ export default function RootLayout({
       <body className="font-body antialiased bg-background" suppressHydrationWarning>
         <PitchProvider>
           <Header />
-          <FloatingNav navItems={navItems} />
           {children}
           <Toaster />
         </PitchProvider>

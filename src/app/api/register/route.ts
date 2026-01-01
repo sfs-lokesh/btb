@@ -180,7 +180,7 @@ export async function POST(req: Request) {
                 name: newUser.name,
                 email: newUser.email,
                 role: newUser.role,
-                ticketId: ticket._id.toString(),
+                ticketId: ticket.qrCodeData, // Use SCAN ID for display
                 userId: newUser._id.toString(),
                 qrCodeData: ticket.qrCodeData,
                 finalPrice,

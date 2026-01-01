@@ -259,7 +259,7 @@ export default function UserDashboard() {
 
             {/* Edit Profile Modal */}
             <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-                <DialogContent className="sm:max-w-[500px]">
+                <DialogContent className="sm:max-w-[500px] max-h-[85vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>Edit Profile</DialogTitle>
                         <CardDescription>Update your project and personal details.</CardDescription>
@@ -282,7 +282,7 @@ export default function UserDashboard() {
                             <Input value={formData.teamName || ''} onChange={e => setFormData({ ...formData, teamName: e.target.value })} placeholder="Enter team name" />
                         </div>
                         <div className="space-y-2">
-                            <Label>Team Members (Comma separated)</Label>
+                            <Label>Team Members (Comma separated, e.g. John Doe, Jane Smith)</Label>
                             <Input
                                 value={Array.isArray(formData.teamMembers) ? formData.teamMembers.join(', ') : (formData.teamMembers || '')}
                                 onChange={e => setFormData({ ...formData, teamMembers: e.target.value.split(',').map((s: string) => s.trim()) })}

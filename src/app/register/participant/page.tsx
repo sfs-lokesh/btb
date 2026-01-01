@@ -364,7 +364,7 @@ export default function ParticipantRegister() {
     const prevStep = () => setStep(prev => prev - 1);
 
     return (
-        <div className="max-w-2xl mx-auto mt-10 p-6 bg-card border border-border rounded-lg shadow-md">
+        <div className="max-w-2xl mx-auto mt-36 p-6 bg-card border border-border rounded-lg shadow-md">
             <h1 className="text-2xl font-bold mb-6 text-foreground">Participant Registration</h1>
 
             {/* Progress Indicator */}
@@ -424,12 +424,13 @@ export default function ParticipantRegister() {
 
                         <div>
                             <label className="block text-sm font-medium text-foreground">Select College</label>
-                            <select {...register('collegeId', { required: true })} className="w-full bg-secondary border-input text-foreground p-2 rounded border">
+                            <select {...register('collegeId', { required: "Please select your college" })} className="w-full bg-secondary border-input text-foreground p-2 rounded border">
                                 <option value="">-- Select College --</option>
                                 {colleges.map(c => (
                                     <option key={c._id} value={c._id}>{c.name}</option>
                                 ))}
                             </select>
+                            {errors.collegeId && <span className="text-xs text-red-500">{errors.collegeId.message}</span>}
                         </div>
 
                         <div className="pt-4">
@@ -523,6 +524,28 @@ export default function ParticipantRegister() {
                 {/* Step 3: Payment & Review */}
                 {step === 3 && (
                     <div className="space-y-4">
+                        <div className="bg-secondary/20 p-4 rounded-lg border border-border">
+                            <h3 className="font-semibold text-foreground mb-2">Review Details</h3>
+                            <div className="space-y-1 text-sm">
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Name:</span>
+                                    <span>{watch('name')}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Email:</span>
+                                    <span>{watch('email')}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Phone:</span>
+                                    <span>{watch('phone')}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">College:</span>
+                                    <span>{colleges.find(c => c._id === watch('collegeId'))?.name || '-'}</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="bg-secondary/20 p-4 rounded-lg border border-border">
                             <h3 className="font-semibold text-foreground mb-2">Order Summary</h3>
                             <div className="flex justify-between text-sm">

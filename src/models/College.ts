@@ -11,7 +11,10 @@ const CollegeSchema = new Schema({
     discountAmount: { type: Number, required: true },
     earnings: { type: Number, default: 0 },
     paidAmount: { type: Number, default: 0 }, // Amount already paid to college
-    registrations: { type: Number, default: 0 }, // Count of registrations, not array
+    registrations: { type: Number, default: 0 },
+    expiryDate: { type: Date },
+    usageLimit: { type: Number },
+    isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 
 export default mongoose.model('College', CollegeSchema);

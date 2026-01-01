@@ -1,11 +1,5 @@
-import { UserRegistrationForm } from '@/components/user-registration-form';
-import { Toaster } from '@/components/ui/toaster';
+import { redirect } from 'next/navigation';
 
 export default function RegisterPage() {
-  return (
-    <>
-      <UserRegistrationForm />
-      <Toaster />
-    </>
-  );
+  redirect('/register/participant');
 }
