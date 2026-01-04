@@ -36,6 +36,14 @@ export async function POST(req: Request) {
       );
     }
 
+    // Check Payment Status for Participants
+    if (user.role === 'Participant' && user.paymentStatus !== 'Completed') {
+      return NextResponse.json(
+        { error: 'Registration incomplete. Payment not verifiable.' },
+        { status: 403 }
+      );
+    }
+
     // Generate JWT token
     const token = generateToken({
       userId: user._id.toString(),

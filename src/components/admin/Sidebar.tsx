@@ -7,7 +7,9 @@ import {
     Store,
     Settings,
     LogOut,
-    QrCode
+    QrCode,
+    Vote,
+    Users
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -26,6 +28,8 @@ export function AdminSidebar({ activeTab, setActiveTab, onLogout }: SidebarProps
         { id: 'coupons', label: 'Coupons', icon: Ticket },
         { id: 'stalls', label: 'Stall Bookings', icon: Store },
         { id: 'registrations', label: 'Registrations', icon: GraduationCap },
+        { id: 'voting', label: 'Live Voting', icon: Vote },
+        { id: 'managers', label: 'Managers', icon: Users },
         { id: 'qr-logs', label: 'QR Scan Logs', icon: QrCode },
         { id: 'settings', label: 'Settings', icon: Settings },
     ];

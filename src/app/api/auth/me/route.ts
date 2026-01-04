@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
         }
 
         // Fetch full user details from DB
-        const fullUser = await User.findById(user._id).select('-password');
+        const fullUser = await User.findById(user._id).select('-password').populate('collegeId');
 
         if (!fullUser) {
             return NextResponse.json({ user: null }, { status: 401 });

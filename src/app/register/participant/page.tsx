@@ -301,7 +301,11 @@ export default function ParticipantRegister() {
 
         const rzp1 = new window.Razorpay(options);
         rzp1.on('payment.failed', function (response: any) {
-            alert(response.error.description);
+            toast({
+                title: "Payment Failed",
+                description: response.error.description,
+                variant: "destructive"
+            });
         });
         rzp1.open();
     };
@@ -581,12 +585,7 @@ export default function ParticipantRegister() {
                         </div>
 
                         <div className="border-t border-border pt-4 mt-4 space-y-3">
-                            <div className="flex items-start gap-2">
-                                <input type="checkbox" {...register('skillVerification', { required: true })} id="skillVerify" className="mt-1" />
-                                <label htmlFor="skillVerify" className="text-sm text-muted-foreground">
-                                    I confirm that I possess the necessary skills for the selected category and that my submission is genuine. I understand that idea-level submissions without a prototype/MVP will be rejected.
-                                </label>
-                            </div>
+
                             <div className="flex items-start gap-2">
                                 <input type="checkbox" {...register('guidelinesAccepted', { required: true })} id="guidelines" className="mt-1" />
                                 <label htmlFor="guidelines" className="text-sm text-muted-foreground">

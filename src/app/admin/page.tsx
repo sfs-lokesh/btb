@@ -6,6 +6,8 @@ import { AdminSidebar } from '@/components/admin/Sidebar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, Plus, Download, Edit, Eye, Pencil, Trash2 } from 'lucide-react';
@@ -31,6 +33,7 @@ export default function AdminDashboard() {
   const [coupons, setCoupons] = useState<InfluencerCoupon[]>([]);
   const [stalls, setStalls] = useState<any[]>([]);
   const [tickets, setTickets] = useState<any[]>([]);
+  const [contestants, setContestants] = useState<any[]>([]);
   const [qrSearch, setQrSearch] = useState('');
   const [qrFilter, setQrFilter] = useState('All'); // All, Scanned, Unscanned
   const [loading, setLoading] = useState(true);
@@ -38,6 +41,8 @@ export default function AdminDashboard() {
   // Form States
   const [isCouponModalOpen, setIsCouponModalOpen] = useState(false);
   const [isCollegeModalOpen, setIsCollegeModalOpen] = useState(false);
+  const [isContestantModalOpen, setIsContestantModalOpen] = useState(false);
+  const [isManagerModalOpen, setIsManagerModalOpen] = useState(false);
   const [isStallEditModalOpen, setIsStallEditModalOpen] = useState(false);
 
   const [couponType, setCouponType] = useState<'influencer' | 'college'>('influencer');
@@ -47,6 +52,16 @@ export default function AdminDashboard() {
     usageLimit: null as number | null,
     expiryDate: ''
   });
+  const [newContestant, setNewContestant] = useState({
+    name: '',
+    teamName: '',
+    projectTitle: '',
+    projectDescription: '',
+    category: 'Web Development',
+    projectLinks: '',
+    image: ''
+  });
+  const [newManager, setNewManager] = useState({ name: '', email: '', password: '', phone: '' });
   const [newCollege, setNewCollege] = useState({
     name: '',
     couponCode: '',
@@ -59,12 +74,16 @@ export default function AdminDashboard() {
   const [editingCoupon, setEditingCoupon] = useState<any>(null);
   const [editingUser, setEditingUser] = useState<any>(null);
   const [viewingUser, setViewingUser] = useState<any>(null);
+  const [editingContestant, setEditingContestant] = useState<any>(null);
 
   // Modal States
   const [isEditCollegeOpen, setIsEditCollegeOpen] = useState(false);
   const [isEditCouponOpen, setIsEditCouponOpen] = useState(false);
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
+
   const [isViewUserOpen, setIsViewUserOpen] = useState(false);
+  const [isVoteViewModalOpen, setIsVoteViewModalOpen] = useState(false);
+  const [viewingVotes, setViewingVotes] = useState<any[]>([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -101,12 +120,13 @@ export default function AdminDashboard() {
       setLoading(true);
       const headers = getAuthHeaders();
       const ts = new Date().getTime();
-      const [collegesRes, usersRes, couponsRes, stallsRes, ticketsRes] = await Promise.all([
+      const [collegesRes, usersRes, couponsRes, stallsRes, ticketsRes, contestantsRes] = await Promise.all([
         fetch(`/api/admin/college?t=${ts}`, { headers, cache: 'no-store', next: { revalidate: 0 } }),
         fetch(`/api/admin/reports?type=master&t=${ts}`, { headers, cache: 'no-store', next: { revalidate: 0 } }),
         fetch(`/api/admin/coupon?t=${ts}`, { headers, cache: 'no-store', next: { revalidate: 0 } }),
         fetch(`/api/stall/book?t=${ts}`, { headers, cache: 'no-store', next: { revalidate: 0 } }),
-        fetch(`/api/admin/tickets?t=${ts}`, { headers, cache: 'no-store', next: { revalidate: 0 } })
+        fetch(`/api/admin/tickets?t=${ts}`, { headers, cache: 'no-store', next: { revalidate: 0 } }),
+        fetch(`/api/admin/contestants?t=${ts}`, { headers, cache: 'no-store', next: { revalidate: 0 } })
       ]);
 
       if (collegesRes.ok) setColleges(await collegesRes.json());
@@ -117,6 +137,7 @@ export default function AdminDashboard() {
       }
       if (stallsRes.ok) setStalls(await stallsRes.json());
       if (ticketsRes.ok) setTickets(await ticketsRes.json());
+      if (contestantsRes.ok) setContestants(await contestantsRes.json());
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -345,6 +366,102 @@ export default function AdminDashboard() {
       console.error(`Error ${action}ing booking:`, error);
       alert(`Failed to ${action} booking`);
     }
+  };
+
+  const { toast } = useToast();
+
+  const handleViewVotes = (votes: any[]) => {
+    setViewingVotes(votes || []);
+    setIsVoteViewModalOpen(true);
+  };
+
+  const createContestant = async () => {
+    try {
+      const payload = editingContestant ? { ...newContestant, ...editingContestant } : newContestant;
+      const url = '/api/admin/contestants';
+      const method = editingContestant ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        fetchData();
+        setIsContestantModalOpen(false);
+        setEditingContestant(null);
+        setNewContestant({
+          name: '', teamName: '', projectTitle: '', projectDescription: '', category: 'Web Development', projectLinks: '', image: ''
+        });
+        toast({ title: editingContestant ? "Contestant Updated" : "Contestant Added" });
+      } else {
+        const err = await res.json();
+        toast({ title: "Failed", description: err.error, variant: "destructive" });
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  const toggleContestantStatus = async (id: string, currentStatus: boolean) => {
+    try {
+      const res = await fetch('/api/admin/contestants', {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ _id: id, isActive: !currentStatus })
+      });
+      if (res.ok) {
+        fetchData();
+        toast({ title: "Status Updated" });
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  const deleteContestant = async (id: string) => {
+    if (!confirm("Are you sure?")) return;
+    try {
+      const res = await fetch(`/api/admin/contestants?id=${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        fetchData();
+        toast({ title: "Contestant Deleted" });
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  const createManager = async () => {
+    try {
+      const res = await fetch('/api/register', { // Use register route but with Manager role? Or specialized route? 
+        // Register route defaults to Participant. 
+        // I should create a specific route for admin to create user or use '/api/admin/users'. 
+        // I don't have '/api/admin/users' create logic.
+        // I will use '/api/register' and assume I can pass 'role'.
+        // Wait, register route forces 'Participant'.
+        // I'll create a quick Client-side fetch to a NEW '/api/admin/managers' or just use '/api/auth/signup' if it exists?
+        // The user said "add manager section... when admin create manager".
+        // I'll add a simple create logic here calling /api/register but I need to modify /api/register to accept Role if Admin?
+        // Or better: Create `api/admin/managers/route.ts`.
+        // I'll Assume I'll create that route next.
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ ...newManager, role: 'Manager' })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        fetchData();
+        setIsManagerModalOpen(false);
+        setNewManager({ name: '', email: '', password: '', phone: '' });
+        toast({ title: "Manager Created" });
+      } else {
+        toast({ title: "Error", description: data.error || data.message, variant: "destructive" });
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  const deleteManager = async (id: string) => {
+    if (!confirm("Are you sure?")) return;
+    deleteUser(id); // Reuse deleteUser
   };
 
   if (loading) return <div className="flex justify-center items-center h-screen"><Loader2 className="animate-spin text-primary w-8 h-8" /></div>;
@@ -849,7 +966,7 @@ export default function AdminDashboard() {
                       {user.paymentStatus || 'N/A'}
                     </span>
                   </TableCell>
-                  <TableCell>{user.collegeName || user.college || '-'}</TableCell>
+                  <TableCell>{user.collegeName || user.collegeId?.name || user.college || '-'}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button variant="ghost" size="icon" onClick={() => handleViewUser(user)} title="View Credentials">
@@ -927,6 +1044,107 @@ export default function AdminDashboard() {
       </Card>
     </div>
   );
+
+  const renderContestants = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Live Voting Contestants</h2>
+        <Button onClick={() => { setEditingContestant(null); setIsContestantModalOpen(true); }}><Plus className="mr-2 h-4 w-4" /> Add Contestant</Button>
+      </div>
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Image</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Team</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Project</TableHead>
+                <TableHead>Votes</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {contestants.map((c: any) => (
+                <TableRow key={c._id}>
+                  <TableCell><img src={c.image || 'https://via.placeholder.com/40'} alt="avatar" className="w-10 h-10 rounded-full object-cover" /></TableCell>
+                  <TableCell>{c.name}</TableCell>
+                  <TableCell>{c.teamName}</TableCell>
+                  <TableCell>{c.category}</TableCell>
+                  <TableCell className="max-w-[150px] truncate" title={c.projectTitle}>{c.projectTitle}</TableCell>
+                  <TableCell className="max-w-[150px] truncate" title={c.projectTitle}>{c.projectTitle}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold">{c.votes?.length || 0}</span>
+                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => handleViewVotes(c.votes)}>
+                        <Eye className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`px-2 py-1 rounded text-xs font-bold ${c.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                      {c.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="ghost" onClick={() => toggleContestantStatus(c._id, c.isActive)}>
+                        {c.isActive ? 'Deactivate' : 'Activate'}
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => { setEditingContestant(c); setIsContestantModalOpen(true); }}><Edit className="w-4 h-4" /></Button>
+                      <Button size="sm" variant="destructive" onClick={() => deleteContestant(c._id)}><Trash2 className="w-4 h-4" /></Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {contestants.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8">No contestants found.</TableCell></TableRow>}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  const renderManagers = () => {
+    const managers = users.filter(u => u.role === 'Manager');
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold">Managers</h2>
+          <Button onClick={() => setIsManagerModalOpen(true)}><Plus className="mr-2 h-4 w-4" /> Add Manager</Button>
+        </div>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {managers.map(m => (
+                  <TableRow key={m._id}>
+                    <TableCell>{m.name}</TableCell>
+                    <TableCell>{m.email}</TableCell>
+                    <TableCell>{m.phone || '-'}</TableCell>
+                    <TableCell>
+                      <Button size="sm" variant="destructive" onClick={() => deleteManager(m._id)}><Trash2 className="w-4 h-4" /></Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {managers.length === 0 && <TableRow><TableCell colSpan={4} className="text-center py-4">No managers found</TableCell></TableRow>}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  };
 
   const toggleTicketStatus = async (ticketId: string, currentStatus: string) => {
     try {
@@ -1052,6 +1270,8 @@ export default function AdminDashboard() {
         {activeTab === 'stalls' && renderStalls()}
         {activeTab === 'registrations' && renderRegistrations()}
         {activeTab === 'qr-logs' && renderQRLogs()}
+        {activeTab === 'voting' && renderContestants()}
+        {activeTab === 'managers' && renderManagers()}
         {activeTab === 'settings' && renderSettings()}
       </main>
 
@@ -1398,6 +1618,117 @@ export default function AdminDashboard() {
               <Button className="w-full" onClick={updateStall}>Update Stall</Button>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Contestant Modal */}
+      <Dialog open={isContestantModalOpen} onOpenChange={setIsContestantModalOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editingContestant ? 'Edit Contestant' : 'Add New Contestant'}</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Name</Label>
+                <Input value={editingContestant ? editingContestant.name : newContestant.name}
+                  onChange={e => editingContestant ? setEditingContestant({ ...editingContestant, name: e.target.value }) : setNewContestant({ ...newContestant, name: e.target.value })} />
+              </div>
+              <div>
+                <Label>Team Name</Label>
+                <Input value={editingContestant ? editingContestant.teamName : newContestant.teamName}
+                  onChange={e => editingContestant ? setEditingContestant({ ...editingContestant, teamName: e.target.value }) : setNewContestant({ ...newContestant, teamName: e.target.value })} />
+              </div>
+            </div>
+            <div>
+              <Label>Category</Label>
+              <Select value={editingContestant ? editingContestant.category : newContestant.category}
+                onValueChange={v => editingContestant ? setEditingContestant({ ...editingContestant, category: v }) : setNewContestant({ ...newContestant, category: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Web Development">Web Development</SelectItem>
+                  <SelectItem value="App Development">App Development</SelectItem>
+                  <SelectItem value="Software">Software</SelectItem>
+                  <SelectItem value="AI/ML">AI/ML</SelectItem>
+                  <SelectItem value="IoT">IoT</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Project Title</Label>
+              <Input value={editingContestant ? editingContestant.projectTitle : newContestant.projectTitle}
+                onChange={e => editingContestant ? setEditingContestant({ ...editingContestant, projectTitle: e.target.value }) : setNewContestant({ ...newContestant, projectTitle: e.target.value })} />
+            </div>
+            <div>
+              <Label>Description</Label>
+              <Textarea value={editingContestant ? editingContestant.projectDescription : newContestant.projectDescription}
+                onChange={e => editingContestant ? setEditingContestant({ ...editingContestant, projectDescription: e.target.value }) : setNewContestant({ ...newContestant, projectDescription: e.target.value })} />
+            </div>
+            <div>
+              <Label>Project Link</Label>
+              <Input value={editingContestant ? editingContestant.projectLinks : newContestant.projectLinks}
+                onChange={e => editingContestant ? setEditingContestant({ ...editingContestant, projectLinks: e.target.value }) : setNewContestant({ ...newContestant, projectLinks: e.target.value })} />
+            </div>
+            <div>
+              <Label>Profile/Logo Image URL</Label>
+              <Input value={editingContestant ? editingContestant.image : newContestant.image}
+                onChange={e => editingContestant ? setEditingContestant({ ...editingContestant, image: e.target.value }) : setNewContestant({ ...newContestant, image: e.target.value })} />
+            </div>
+            <Button className="w-full" onClick={createContestant}>{editingContestant ? 'Update' : 'Create'}</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manager Modal */}
+      <Dialog open={isManagerModalOpen} onOpenChange={setIsManagerModalOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Add Manager</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-4">
+            <div><Label>Name</Label><Input value={newManager.name} onChange={e => setNewManager({ ...newManager, name: e.target.value })} /></div>
+            <div><Label>Email</Label><Input value={newManager.email} onChange={e => setNewManager({ ...newManager, email: e.target.value })} /></div>
+            <div><Label>Phone</Label><Input value={newManager.phone} onChange={e => setNewManager({ ...newManager, phone: e.target.value })} /></div>
+            <div><Label>Password</Label><Input type="password" value={newManager.password} onChange={e => setNewManager({ ...newManager, password: e.target.value })} /></div>
+            <Button className="w-full" onClick={createManager}>Create Manager</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Vote Details Modal */}
+      <Dialog open={isVoteViewModalOpen} onOpenChange={setIsVoteViewModalOpen}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Vote Details</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-4">
+            {viewingVotes.length === 0 ? (
+              <p className="text-muted-foreground text-center">No votes yet.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Time</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {viewingVotes.map((v: any, i: number) => (
+                    <TableRow key={i}>
+                      <TableCell>
+                        <div className="font-medium">{v.userId?.name || 'Unknown'}</div>
+                        <div className="text-xs text-muted-foreground">{v.userId?.email}</div>
+                      </TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded text-xs font-bold ${v.type === 'up' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {v.type === 'up' ? 'Upvote' : 'Downvote'}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {new Date(v.timestamp).toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 

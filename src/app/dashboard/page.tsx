@@ -13,6 +13,7 @@ import { Loader2, Edit, Save, LogOut } from 'lucide-react';
 import { useContext } from 'react';
 import { PitchContext } from '@/context/PitchContext';
 import { PitchCard } from '@/components/pitch-card';
+import { LiveVotingPanel } from '@/components/LiveVotingPanel';
 import { Logo } from '@/components/logo';
 import { safeLocalStorage } from '@/lib/utils';
 
@@ -149,7 +150,7 @@ export default function UserDashboard() {
                                         </div>
                                         <div>
                                             <Label className="text-muted-foreground">College</Label>
-                                            <div className="font-medium">{user.college || '-'}</div>
+                                            <div className="font-medium">{user.collegeName || user.collegeId?.name || user.college || '-'}</div>
                                         </div>
                                         <div>
                                             <Label className="text-muted-foreground">Payment Status</Label>
@@ -157,12 +158,7 @@ export default function UserDashboard() {
                                                 {user.paymentStatus}
                                             </span>
                                         </div>
-                                        <div>
-                                            <Label className="text-muted-foreground">Skill Verification</Label>
-                                            <span className={`px-2 py-1 rounded text-xs font-medium ${user.skillVerification ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                                                {user.skillVerification ? 'Verified' : 'Pending'}
-                                            </span>
-                                        </div>
+
                                     </div>
                                 </CardContent>
                             </Card>
@@ -242,17 +238,7 @@ export default function UserDashboard() {
                     </TabsContent>
 
                     <TabsContent value="voting">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {pitches.length > 0 ? (
-                                pitches.map(pitch => (
-                                    <PitchCard key={pitch._id} pitch={pitch} />
-                                ))
-                            ) : (
-                                <div className="col-span-full text-center py-10 text-muted-foreground">
-                                    No active contestants available for voting.
-                                </div>
-                            )}
-                        </div>
+                        <LiveVotingPanel />
                     </TabsContent>
                 </Tabs>
             </main>

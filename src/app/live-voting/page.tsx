@@ -40,103 +40,28 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
 }
 
 
+import { LiveVotingPanel } from '@/components/LiveVotingPanel';
+
 export default function LiveVotingPage() {
-    const { pitches, loading, isLiveMode, isLeaderboardLive } = useContext(PitchContext);
+    // AuthGuard logic stays same, or I can copy it here if I am replacing the whole file content in a way that needs it.
+    // The previous file content had AuthGuard defined locally. 
+    // I should preserve AuthGuard definition if I am not importing it.
 
-    if (loading) {
-        return (
-            <div className="flex flex-col min-h-screen bg-background">
-                <main className="flex-1 p-4 sm:p-6 md:p-8">
-                    <div className="container mx-auto">
-                        <div className="text-center mb-8">
-                            <Skeleton className="h-10 w-3/4 mx-auto" />
-                            <Skeleton className="h-4 w-1/2 mx-auto mt-4" />
-                        </div>
-                        <div className="space-y-12">
-                            <div>
-                                <Skeleton className="h-8 w-1/4 mb-6" />
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                    {[...Array(3)].map((_, i) => (
-                                        <div key={i} className="space-y-4">
-                                            <Skeleton className="h-48 w-full" />
-                                            <Skeleton className="h-6 w-3/4" />
-                                            <Skeleton className="h-4 w-1/2" />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </main>
-            </div>
-        );
-    }
+    // Actually, I'll just replace the component body.
 
-    const visiblePitches = pitches.filter((pitch) => pitch.visible);
+    const { isUserAuthenticated, loading: contextLoading } = useContext(PitchContext);
+    // ... AuthGuard logic ... 
 
-    const pitchesByCategory = visiblePitches.reduce((acc, pitch) => {
-        if (!acc[pitch.category]) {
-            acc[pitch.category] = [];
-        }
-        acc[pitch.category].push(pitch);
-        return acc;
-    }, {} as Record<string, Pitch[]>);
-
-    const categories = Object.keys(pitchesByCategory).sort();
+    // Wait, replacing the whole file is cleaner.
 
     return (
         <AuthGuard>
-            <div className="flex flex-col min-h-screen bg-background pt-16">
-                {isLiveMode && (
-                    <div className="bg-primary text-primary-foreground text-center p-4">
-                        <div className="container mx-auto">
-                            <p className="font-bold text-lg animate-pulse">
-                                Live Event in Progress!
-                            </p>
-                            <Button asChild variant="secondary" className="mt-2">
-                                <Link href="/live">Click here to join</Link>
-                            </Button>
-                        </div>
-                    </div>
-                )}
-                <main className="flex-1 p-4 sm:p-6 md:p-8">
-                    <div className="container mx-auto">
-                        {isLeaderboardLive && <Leaderboard />}
-                        <div className="text-center mb-12">
-                            <h2 className="text-4xl font-bold">Pitches Ready for Review</h2>
-                            <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">
-                                Browse the projects below. When the live event starts, you'll be able to cast your vote for your favorite innovators.
-                            </p>
-                        </div>
-                        {categories.length === 0 ? (
-                            <div className="text-center text-muted-foreground py-16">
-                                <h3 className="text-2xl font-bold">No Pitches Available</h3>
-                                <p>Pitches for the event have not been added yet. Please check back later.</p>
-                            </div>
-                        ) : (
-                            <div className="space-y-12">
-                                {categories.map((category) => (
-                                    <section key={category}>
-                                        <h3 className="text-2xl font-bold mb-6 border-b pb-2">
-                                            {category}
-                                        </h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                            {pitchesByCategory[category].map((pitch) => (
-                                                <PitchCard key={pitch._id} pitch={pitch} />
-                                            ))}
-                                        </div>
-                                    </section>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </main>
-                <footer className="py-6 px-4 border-t bg-secondary/50">
-                    <div className="container mx-auto flex flex-col md:flex-row justify-between items-center text-sm text-muted-foreground">
-                        <p>© 2025 GWD Global Pvt. Ltd. All rights reserved.</p>
-                        <p className="mt-2 md:mt-0">Contact: <a href="mailto:rahman@gwdglobal.in" className="hover:text-primary">rahman@gwdglobal.in</a></p>
-                    </div>
-                </footer>
+            <div className="min-h-screen bg-background pt-16 px-4">
+                <div className="container mx-auto">
+                    <h1 className="text-3xl font-bold text-center mb-2">Live Voting Event</h1>
+                    <p className="text-center text-muted-foreground mb-8">Watch the pitch and cast your vote in real-time.</p>
+                    <LiveVotingPanel />
+                </div>
             </div>
         </AuthGuard>
     );
