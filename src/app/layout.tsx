@@ -3,10 +3,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { PitchProvider } from '@/context/PitchContext';
 import { Toaster } from '@/components/ui/toaster';
-import { FloatingNav } from '@/components/ui/floating-navbar';
-import { Briefcase, Home, Users, Vote } from 'lucide-react';
 import { Header } from '@/components/header';
-
+import { Suspense } from 'react';
+import { Home, Users, Vote, Briefcase } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Behind the Build — India’s First Stage for Freelancers & Innovators',
@@ -32,33 +31,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const navItems = [
-    {
-      name: "Home",
-      link: "/",
-      icon: <Home className="h-4 w-4 text-neutral-500 dark:text-white" />,
-    },
-    {
-      name: "Register",
-      link: "/register/participant",
-      icon: <Users className="h-4 w-4 text-neutral-500 dark:text-white" />,
-    },
-    {
-      name: "Live Voting",
-      link: "/live-voting",
-      icon: <Vote className="h-4 w-4 text-neutral-500 dark:text-white" />,
-    },
-    {
-      name: "Partners",
-      link: "/partners",
-      icon: <Briefcase className="h-4 w-4 text-neutral-500 dark:text-white" />,
-    },
-    {
-      name: "Stall Bookings",
-      link: "/stalls",
-      icon: <Briefcase className="h-4 w-4 text-neutral-500 dark:text-white" />,
-    }
-  ];
 
   return (
     <html lang="en" className="dark">
@@ -76,7 +48,9 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased bg-background" suppressHydrationWarning>
         <PitchProvider>
-          <Header />
+          <Suspense fallback={null}>
+            <Header />
+          </Suspense>
           {children}
           <Toaster />
         </PitchProvider>

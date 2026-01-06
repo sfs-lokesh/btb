@@ -34,6 +34,14 @@ const UserSchema = new Schema({
   companyName: { type: String },
   designation: { type: String },
 
+  // Profile Image stored as Blob
+  profileImage: { type: Buffer },
+  profileImageType: { type: String },
+
+  // Password Reset
+  resetPasswordToken: { type: String },
+  resetPasswordExpire: { type: Date },
+
 }, { timestamps: true });
 
 // Hash password before saving

@@ -38,7 +38,7 @@ declare global {
 }
 
 export default function ParticipantRegister() {
-    const { register, handleSubmit, control, watch, setValue, formState: { errors } } = useForm<FormData>({
+    const { register, handleSubmit, control, watch, setValue, trigger, formState: { errors } } = useForm<FormData>({
         defaultValues: {
             name: '',
             email: '',
@@ -84,44 +84,7 @@ export default function ParticipantRegister() {
         };
     }, []);
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
 
-        setUploading(true);
-        const formData = new FormData();
-        formData.append('file', file);
-
-        try {
-            const res = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData
-            });
-            const data = await res.json();
-            if (data.success) {
-                setValue('projectLinks', data.url);
-                toast({
-                    title: "File uploaded successfully!",
-                    description: "Project link has been auto-filled.",
-                });
-            } else {
-                toast({
-                    title: "Upload failed",
-                    description: data.error,
-                    variant: "destructive"
-                });
-            }
-        } catch (error) {
-            console.error('Upload error:', error);
-            toast({
-                title: "Upload failed",
-                description: "An error occurred while uploading the file.",
-                variant: "destructive"
-            });
-        } finally {
-            setUploading(false);
-        }
-    };
 
     const teamType = watch('teamType');
     const selectedCollegeId = watch('collegeId');
@@ -348,7 +311,7 @@ export default function ParticipantRegister() {
             } else {
                 toast({
                     title: "Registration Failed",
-                    description: result.message,
+                    description: result.error || result.message || "Unknown error occurred",
                     variant: "destructive"
                 });
                 setLoading(false);
@@ -364,19 +327,53 @@ export default function ParticipantRegister() {
         }
     };
 
-    const nextStep = () => setStep(prev => prev + 1);
+    const nextStep = async () => {
+        let valid = false;
+        if (step === 1) {
+            valid = await control._options.shouldUseNativeValidation ? true : await trigger(['name', 'email', 'phone', 'collegeId', 'password']);
+            // Explicitly trigger validation for these fields
+            const f1 = await trigger('name');
+            const f2 = await trigger('email');
+            const f3 = await trigger('phone');
+            const f4 = await trigger('collegeId');
+            const f5 = await trigger('password');
+            valid = f1 && f2 && f3 && f4 && f5;
+        } else if (step === 2) {
+            const f1 = await trigger('teamType');
+            const f2 = teamType !== 'Solo' ? await trigger('teamName') : true;
+            const f3 = await trigger('projectTitle');
+            const f4 = await trigger('projectDescription');
+            const f5 = await trigger('category');
+
+            // Check team members
+            let membersValid = true;
+            if (teamType !== 'Solo') {
+                // We need to trigger validation for teamMembers fields
+                // react-hook-form trigger accepts path or array of paths
+                const memberPaths = fields.map((_, i) => `teamMembers.${i}.value` as const);
+                membersValid = await trigger(memberPaths);
+            }
+
+            valid = f1 && f2 && f3 && f4 && f5 && membersValid;
+        }
+
+        if (valid) {
+            setStep(prev => prev + 1);
+        }
+    };
     const prevStep = () => setStep(prev => prev - 1);
 
+
     return (
-        <div className="max-w-2xl mx-auto mt-36 p-6 bg-card border border-border rounded-lg shadow-md">
+        <div className="max-w-2xl mx-auto mt-36 p-6 bg-card border border-border rounded-lg shadow-md" >
             <h1 className="text-2xl font-bold mb-6 text-foreground">Participant Registration</h1>
 
             {/* Progress Indicator */}
-            <div className="flex justify-between mb-8 text-sm font-medium text-muted-foreground">
+            <div className="flex justify-between mb-8 text-sm font-medium text-muted-foreground" >
                 <span className={step >= 1 ? "text-primary" : ""}>1. Personal</span>
                 <span className={step >= 2 ? "text-primary" : ""}>2. Team & Project</span>
                 <span className={step >= 3 ? "text-primary" : ""}>3. Review & Pay</span>
-            </div>
+            </div >
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
@@ -497,23 +494,10 @@ export default function ParticipantRegister() {
                                     <textarea {...register('projectDescription', { required: true, minLength: 60 })} className="w-full bg-secondary border-input text-foreground p-2 rounded border" rows={3} />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-foreground">Project Links (GitHub/Drive) OR Upload Abstract</label>
+                                    <label className="block text-sm font-medium text-foreground">Project Links (GitHub/Drive)</label>
                                     <div className="flex gap-2">
                                         <input {...register('projectLinks')} className="flex-1 bg-secondary border-input text-foreground p-2 rounded border" placeholder="https://..." />
-                                        <div className="relative">
-                                            <input
-                                                type="file"
-                                                onChange={handleFileUpload}
-                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                                accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                                                disabled={uploading}
-                                            />
-                                            <button type="button" className="bg-secondary border border-input text-foreground px-3 py-2 rounded hover:bg-secondary/80">
-                                                {uploading ? 'Uploading...' : 'Upload'}
-                                            </button>
-                                        </div>
                                     </div>
-                                    <p className="text-xs text-muted-foreground mt-1">Supported: PDF, DOC, PNG, JPG. Uploading will auto-fill the link.</p>
                                 </div>
                             </div>
                         </div>
@@ -605,6 +589,6 @@ export default function ParticipantRegister() {
 
             </form>
             <Toaster />
-        </div>
+        </div >
     );
 }

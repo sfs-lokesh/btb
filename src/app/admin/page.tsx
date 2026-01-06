@@ -76,11 +76,12 @@ export default function AdminDashboard() {
   const [viewingUser, setViewingUser] = useState<any>(null);
   const [editingContestant, setEditingContestant] = useState<any>(null);
 
+  const [contestantImageFile, setContestantImageFile] = useState<File | null>(null);
+
   // Modal States
   const [isEditCollegeOpen, setIsEditCollegeOpen] = useState(false);
   const [isEditCouponOpen, setIsEditCouponOpen] = useState(false);
   const [isEditUserOpen, setIsEditUserOpen] = useState(false);
-
   const [isViewUserOpen, setIsViewUserOpen] = useState(false);
   const [isVoteViewModalOpen, setIsVoteViewModalOpen] = useState(false);
   const [viewingVotes, setViewingVotes] = useState<any[]>([]);
@@ -377,20 +378,41 @@ export default function AdminDashboard() {
 
   const createContestant = async () => {
     try {
-      const payload = editingContestant ? { ...newContestant, ...editingContestant } : newContestant;
+      const payload: any = editingContestant ? { ...newContestant, ...editingContestant } : { ...newContestant };
       const url = '/api/admin/contestants';
       const method = editingContestant ? 'PUT' : 'POST';
 
+      let body;
+      const headers: any = { 'Authorization': getAuthHeaders().Authorization };
+
+      if (contestantImageFile) {
+        const formData = new FormData();
+        formData.append('image', contestantImageFile);
+        Object.keys(payload).forEach(key => {
+          // We might want to remove existing 'image' string if we are uploading a new one,
+          // or keep it if it's external URL and user wants to use that instead (handled by UI logic preferably).
+          // Here, if file is present, we send it.
+          if (payload[key] !== null && payload[key] !== undefined) {
+            formData.append(key, payload[key]);
+          }
+        });
+        body = formData;
+      } else {
+        headers['Content-Type'] = 'application/json';
+        body = JSON.stringify(payload);
+      }
+
       const res = await fetch(url, {
         method,
-        headers: getAuthHeaders(),
-        body: JSON.stringify(payload)
+        headers: headers,
+        body: body
       });
 
       if (res.ok) {
         fetchData();
         setIsContestantModalOpen(false);
         setEditingContestant(null);
+        setContestantImageFile(null);
         setNewContestant({
           name: '', teamName: '', projectTitle: '', projectDescription: '', category: 'Web Development', projectLinks: '', image: ''
         });
@@ -1669,9 +1691,18 @@ export default function AdminDashboard() {
                 onChange={e => editingContestant ? setEditingContestant({ ...editingContestant, projectLinks: e.target.value }) : setNewContestant({ ...newContestant, projectLinks: e.target.value })} />
             </div>
             <div>
-              <Label>Profile/Logo Image URL</Label>
+              <Label>Profile/Logo Image (Upload)</Label>
+              <Input type="file" accept="image/*" onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  setContestantImageFile(e.target.files[0]);
+                }
+              }} />
+              <div className="text-sm text-gray-500 my-1">OR</div>
+              <Label>Image URL (Optional)</Label>
               <Input value={editingContestant ? editingContestant.image : newContestant.image}
-                onChange={e => editingContestant ? setEditingContestant({ ...editingContestant, image: e.target.value }) : setNewContestant({ ...newContestant, image: e.target.value })} />
+                onChange={e => editingContestant ? setEditingContestant({ ...editingContestant, image: e.target.value }) : setNewContestant({ ...newContestant, image: e.target.value })}
+                placeholder="https://..."
+              />
             </div>
             <Button className="w-full" onClick={createContestant}>{editingContestant ? 'Update' : 'Create'}</Button>
           </div>

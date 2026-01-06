@@ -23,6 +23,10 @@ export async function GET(req: NextRequest) {
         const ticket = await Ticket.findOne({ userId: user._id });
 
         const userObj = fullUser.toObject();
+        if (fullUser.profileImage && fullUser.profileImageType) {
+            userObj.profileImage = `data:${fullUser.profileImageType};base64,${fullUser.profileImage.toString('base64')}`;
+        }
+
         if (ticket) {
             userObj.ticketStatus = ticket.status;
             userObj.scannedAt = ticket.scannedAt;
@@ -43,27 +47,64 @@ export async function PATCH(req: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const body = await req.json();
-        // Expanded allowed updates based on user request "edit everything"
+        const contentType = req.headers.get('content-type') || '';
+        const updates: any = {};
+
         const allowedUpdates = [
             'name', 'phone',
             'teamType', 'teamMembers', 'teamName',
             'projectTitle', 'projectDescription', 'projectLinks', 'category',
-            'college', 'role' // Be careful with role, usually restricted? But user asked "everything". 
-            // I'll exclude role for security. College might be editable if mistake made? 
-            // I'll include 'college'.
+            'college', 'companyName', 'designation'
         ];
 
-        const updates: any = {};
-        Object.keys(body).forEach(key => {
-            if (allowedUpdates.includes(key)) {
-                updates[key] = body[key];
+        if (contentType.includes('multipart/form-data')) {
+            const formData = await req.formData();
+            const file = formData.get('profileImage') as File | null;
+
+            if (file && file.size > 0) {
+                const bytes = await file.arrayBuffer();
+                updates.profileImage = Buffer.from(bytes);
+                updates.profileImageType = file.type;
             }
-        });
+
+            formData.forEach((value, key) => {
+                if (allowedUpdates.includes(key)) {
+                    if (key === 'teamMembers' && typeof value === 'string') {
+                        updates[key] = value.split(',').map(s => s.trim()).filter(Boolean);
+                    } else {
+                        updates[key] = value;
+                    }
+                }
+            });
+        } else {
+            const body = await req.json();
+            Object.keys(body).forEach(key => {
+                if (allowedUpdates.includes(key)) {
+                    updates[key] = body[key];
+                }
+            });
+        }
+
+        // Auto-update teamType based on members count if teamMembers is being updated
+        if (updates.teamMembers) {
+            const count = updates.teamMembers.length;
+            if (count === 0) updates.teamType = 'Solo';
+            else if (count === 1) updates.teamType = 'Team of 2';
+            else if (count === 2) updates.teamType = 'Team of 3';
+            else if (count >= 3) updates.teamType = 'Team of 4';
+        }
 
         const user = await User.findByIdAndUpdate(currentUser._id, updates, { new: true }).select('-password');
 
-        return NextResponse.json({ user });
+        // Convert buffer to base64 for response if needed, or just return user object
+        // Usually better to return the updated user object. 
+        // If we want to return the image usable immediately:
+        const userObj = user.toObject();
+        if (user.profileImage && user.profileImageType) {
+            userObj.profileImage = `data:${user.profileImageType};base64,${user.profileImage.toString('base64')}`;
+        }
+
+        return NextResponse.json({ user: userObj });
     } catch (error: any) {
         console.error('Profile update error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });

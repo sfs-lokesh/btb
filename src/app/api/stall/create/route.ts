@@ -1,14 +1,13 @@
-
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
 import Stall from '@/models/Stall';
 import { getCurrentUser } from '@/lib/auth';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
     await dbConnect();
 
     try {
-        const user = await getCurrentUser();
+        const user = await getCurrentUser(req);
         if (!user || (user.role !== 'Admin' && user.role !== 'SuperAdmin')) {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
         }

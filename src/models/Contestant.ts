@@ -5,6 +5,8 @@ export interface IContestant extends Document {
     name: string;
     teamName: string;
     image?: string;
+    imageBuffer?: Buffer;
+    imageType?: string;
     projectTitle: string;
     projectDescription: string;
     projectLinks?: string;
@@ -23,7 +25,9 @@ const VoteSchema = new Schema({
 const ContestantSchema = new Schema({
     name: { type: String, required: true },
     teamName: { type: String, required: true },
-    image: { type: String }, // URL
+    image: { type: String }, // URL (keeping for backward compatibility or if external URL is used)
+    imageBuffer: { type: Buffer },
+    imageType: { type: String },
     projectTitle: { type: String, required: true },
     projectDescription: { type: String, required: true },
     projectLinks: { type: String },

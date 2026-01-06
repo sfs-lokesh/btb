@@ -290,3 +290,47 @@ export async function verifyEmailConfig(): Promise<boolean> {
         return false;
     }
 }
+
+/**
+ * Send password reset email
+ */
+export async function sendPasswordResetEmail(email: string, resetUrl: string): Promise<boolean> {
+    try {
+        const transporter = getTransporter();
+        if (!transporter) return false;
+
+        const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h2>Password Reset Request</h2>
+    <p>You requested a password reset for your Behind The Build account.</p>
+    <p>Please click the button below to reset your password:</p>
+    <a href="${resetUrl}" class="button">Reset Password</a>
+    <p>Or copy and paste this link in your browser:</p>
+    <p>${resetUrl}</p>
+    <p>This link will expire in 10 minutes.</p>
+    <p>If you didn't request this, please ignore this email.</p>
+</body>
+</html>
+        `;
+
+        await transporter.sendMail({
+            from: EMAIL_FROM,
+            to: email,
+            subject: 'Password Reset Request - Behind The Build',
+            html: htmlContent
+        });
+
+        return true;
+    } catch (error) {
+        console.error('Error sending reset email:', error);
+        return false;
+    }
+}

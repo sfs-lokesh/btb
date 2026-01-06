@@ -26,6 +26,8 @@ export default function UserDashboard() {
     const [formData, setFormData] = useState<any>({});
     const [updating, setUpdating] = useState(false);
 
+    const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+
     useEffect(() => {
         fetchUser();
     }, []);
@@ -63,18 +65,42 @@ export default function UserDashboard() {
         setUpdating(true);
         try {
             const token = safeLocalStorage.getItem('token');
+            let body;
+            const headers: any = { 'Authorization': `Bearer ${token}` };
+
+            if (profileImageFile) {
+                const formDataPayload = new FormData();
+                formDataPayload.append('profileImage', profileImageFile);
+                Object.keys(formData).forEach(key => {
+                    if (key === 'profileImage') return;
+                    if (key === 'teamMembers' && Array.isArray(formData[key])) {
+                        formDataPayload.append(key, formData[key].join(', '));
+                    } else if (formData[key] !== null && formData[key] !== undefined) {
+                        formDataPayload.append(key, formData[key] as string);
+                    }
+                });
+                body = formDataPayload;
+            } else {
+                headers['Content-Type'] = 'application/json';
+                // Clean formData to remove base64 image if it exists in state somehow preventing huge payload? 
+                // Actually formData is initialized from user which has profileImage base64. 
+                // We shouldn't send it back in JSON if we didn't change it, or if we did, we send file.
+                // If we send JSON, we probably should exclude profileImage string to save bandwidth/confusion.
+                const { profileImage, ...rest } = formData;
+                body = JSON.stringify(rest);
+            }
+
             const res = await fetch('/api/auth/me', {
                 method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(formData)
+                headers,
+                body
             });
 
             if (res.ok) {
                 const data = await res.json();
                 setUser(data.user);
+                setFormData(data.user);
+                setProfileImageFile(null); // Reset file input
                 setIsEditOpen(false);
                 alert('Profile updated successfully!');
             } else {
@@ -131,6 +157,15 @@ export default function UserDashboard() {
                                     <CardTitle>Personal Info</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
+                                    <div className="flex items-center gap-4 mb-4">
+                                        {user.profileImage ? (
+                                            <img src={user.profileImage} alt="Profile" className="w-20 h-20 rounded-full object-cover border" />
+                                        ) : (
+                                            <div className="w-20 h-20 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-2xl font-bold">
+                                                {user.name?.charAt(0)}
+                                            </div>
+                                        )}
+                                    </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <Label className="text-muted-foreground">Name</Label>
@@ -251,6 +286,18 @@ export default function UserDashboard() {
                         <CardDescription>Update your project and personal details.</CardDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label>Profile Image</Label>
+                            <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                    if (e.target.files && e.target.files[0]) {
+                                        setProfileImageFile(e.target.files[0]);
+                                    }
+                                }}
+                            />
+                        </div>
                         <div className="space-y-2">
                             <Label>Name</Label>
                             <Input value={formData.name || ''} onChange={e => setFormData({ ...formData, name: e.target.value })} />
