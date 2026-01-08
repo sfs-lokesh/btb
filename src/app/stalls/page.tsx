@@ -100,7 +100,7 @@ export default function StallBooking() {
     if (loading) return <div className="flex justify-center items-center h-screen"><Loader2 className="animate-spin" /></div>;
 
     return (
-        <div className="min-h-screen pt-28 pb-12 px-4 max-w-7xl mx-auto">
+        <div className="min-h-screen pt-32 pb-12 px-4 max-w-7xl mx-auto">
             <h1 className="text-4xl font-bold mb-2 text-foreground">Stall Booking</h1>
             <p className="text-muted-foreground mb-8">Select a stall to view details and book.</p>
 

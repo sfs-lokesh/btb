@@ -27,7 +27,6 @@ type FormData = {
     projectTitle: string;
     projectDescription: string;
     projectLinks: string;
-    skillVerification: boolean;
     guidelinesAccepted: boolean;
 };
 
@@ -53,7 +52,6 @@ export default function ParticipantRegister() {
             projectTitle: '',
             projectDescription: '',
             projectLinks: '',
-            skillVerification: false,
             guidelinesAccepted: false
         }
     });
@@ -309,11 +307,19 @@ export default function ParticipantRegister() {
                 // 2. Start Payment Flow
                 await initializePayment({ ...result.user, phone: data.phone, name: data.name }, result.ticket);
             } else {
-                toast({
-                    title: "Registration Failed",
-                    description: result.error || result.message || "Unknown error occurred",
-                    variant: "destructive"
-                });
+                if (result.error === "User already exists" || result.message === "User already exists") {
+                    toast({
+                        title: "Registration Failed",
+                        description: "User with this email or phone already exists.",
+                        variant: "destructive"
+                    });
+                } else {
+                    toast({
+                        title: "Registration Failed",
+                        description: result.error || result.message || "Unknown error occurred",
+                        variant: "destructive"
+                    });
+                }
                 setLoading(false);
             }
         } catch (err) {
@@ -330,14 +336,22 @@ export default function ParticipantRegister() {
     const nextStep = async () => {
         let valid = false;
         if (step === 1) {
-            valid = await control._options.shouldUseNativeValidation ? true : await trigger(['name', 'email', 'phone', 'collegeId', 'password']);
-            // Explicitly trigger validation for these fields
-            const f1 = await trigger('name');
-            const f2 = await trigger('email');
-            const f3 = await trigger('phone');
-            const f4 = await trigger('collegeId');
-            const f5 = await trigger('password');
-            valid = f1 && f2 && f3 && f4 && f5;
+            valid = await trigger(['name', 'email', 'phone', 'collegeId', 'password']);
+
+            // Double check specific fields if global trigger is fussy, but trigger([]) should work.
+            if (!valid) {
+                // Force show errors
+                const phoneValid = await trigger('phone');
+                if (!phoneValid) {
+                    toast({
+                        title: "Validation Error",
+                        description: "Please enter correct mobile number",
+                        variant: "destructive"
+                    });
+                    return;
+                }
+                return;
+            }
         } else if (step === 2) {
             const f1 = await trigger('teamType');
             const f2 = teamType !== 'Solo' ? await trigger('teamName') : true;
@@ -355,6 +369,14 @@ export default function ParticipantRegister() {
             }
 
             valid = f1 && f2 && f3 && f4 && f5 && membersValid;
+
+            if (!valid) {
+                toast({
+                    title: "Validation Error",
+                    description: "Please check all required fields in this step.",
+                    variant: "destructive"
+                });
+            }
         }
 
         if (valid) {
@@ -488,16 +510,23 @@ export default function ParticipantRegister() {
                                 <div>
                                     <label className="block text-sm font-medium text-foreground">Project Title</label>
                                     <input {...register('projectTitle', { required: true })} className="w-full bg-secondary border-input text-foreground p-2 rounded border" />
+                                    {errors.projectTitle && <span className="text-xs text-red-500">{errors.projectTitle.message || 'Project title is required'}</span>}
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-foreground">Description (60-100 chars)</label>
-                                    <textarea {...register('projectDescription', { required: true, minLength: 60 })} className="w-full bg-secondary border-input text-foreground p-2 rounded border" rows={3} />
+                                    <label className="block text-sm font-medium text-foreground">Description</label>
+                                    <textarea {...register('projectDescription', { required: true })} className="w-full bg-secondary border-input text-foreground p-2 rounded border" rows={3} />
+                                    {errors.projectDescription && <span className="text-xs text-red-500">{errors.projectDescription.message || 'Project description is required'}</span>}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-foreground">Project Links (GitHub/Drive)</label>
                                     <div className="flex gap-2">
-                                        <input {...register('projectLinks')} className="flex-1 bg-secondary border-input text-foreground p-2 rounded border" placeholder="https://..." />
+                                        <input
+                                            {...register('projectLinks')}
+                                            className="flex-1 bg-secondary border-input text-foreground p-2 rounded border"
+                                            placeholder="https://..."
+                                        />
                                     </div>
+                                    {errors.projectLinks && <span className="text-xs text-red-500">{errors.projectLinks.message}</span>}
                                 </div>
                             </div>
                         </div>

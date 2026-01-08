@@ -34,6 +34,7 @@ export default function AdminDashboard() {
   const [stalls, setStalls] = useState<any[]>([]);
   const [tickets, setTickets] = useState<any[]>([]);
   const [contestants, setContestants] = useState<any[]>([]);
+  const [sponsorRequests, setSponsorRequests] = useState<any[]>([]);
   const [qrSearch, setQrSearch] = useState('');
   const [qrFilter, setQrFilter] = useState('All'); // All, Scanned, Unscanned
   const [loading, setLoading] = useState(true);
@@ -121,13 +122,14 @@ export default function AdminDashboard() {
       setLoading(true);
       const headers = getAuthHeaders();
       const ts = new Date().getTime();
-      const [collegesRes, usersRes, couponsRes, stallsRes, ticketsRes, contestantsRes] = await Promise.all([
+      const [collegesRes, usersRes, couponsRes, stallsRes, ticketsRes, contestantsRes, sponsorsRes] = await Promise.all([
         fetch(`/api/admin/college?t=${ts}`, { headers, cache: 'no-store', next: { revalidate: 0 } }),
         fetch(`/api/admin/reports?type=master&t=${ts}`, { headers, cache: 'no-store', next: { revalidate: 0 } }),
         fetch(`/api/admin/coupon?t=${ts}`, { headers, cache: 'no-store', next: { revalidate: 0 } }),
         fetch(`/api/stall/book?t=${ts}`, { headers, cache: 'no-store', next: { revalidate: 0 } }),
         fetch(`/api/admin/tickets?t=${ts}`, { headers, cache: 'no-store', next: { revalidate: 0 } }),
-        fetch(`/api/admin/contestants?t=${ts}`, { headers, cache: 'no-store', next: { revalidate: 0 } })
+        fetch(`/api/admin/contestants?t=${ts}`, { headers, cache: 'no-store', next: { revalidate: 0 } }),
+        fetch(`/api/contact/sponsor?t=${ts}`, { headers, cache: 'no-store', next: { revalidate: 0 } })
       ]);
 
       if (collegesRes.ok) setColleges(await collegesRes.json());
@@ -139,6 +141,8 @@ export default function AdminDashboard() {
       if (stallsRes.ok) setStalls(await stallsRes.json());
       if (ticketsRes.ok) setTickets(await ticketsRes.json());
       if (contestantsRes.ok) setContestants(await contestantsRes.json());
+      if (sponsorsRes.ok) setSponsorRequests(await sponsorsRes.json());
+
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -971,9 +975,9 @@ export default function AdminDashboard() {
                   <TableCell>
                     <div className="flex flex-col gap-1">
                       <span className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-700 w-fit">
-                        {user.teamType || 'Solo'}
+                        {user.teamType === 'Solo' || !user.teamMembers?.length ? 'Solo' : user.teamType}
                       </span>
-                      {user.teamMembers && user.teamMembers.length > 0 && (
+                      {user.teamMembers && user.teamMembers.length > 0 && user.teamType !== 'Solo' && (
                         <div className="text-xs text-muted-foreground">
                           {user.teamMembers.length} members
                         </div>
@@ -1273,6 +1277,45 @@ export default function AdminDashboard() {
     );
   };
 
+  const renderSponsorRequests = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Sponsor Requests</h2>
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Business Name</TableHead>
+                <TableHead>Contact Person</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sponsorRequests.map((req: any) => (
+                <TableRow key={req._id}>
+                  <TableCell className="font-bold">{req.businessName}</TableCell>
+                  <TableCell>{req.name}</TableCell>
+                  <TableCell>{req.email}</TableCell>
+                  <TableCell>{req.phone}</TableCell>
+                  <TableCell>{new Date(req.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <span className="px-2 py-1 rounded text-xs font-medium bg-secondary text-secondary-foreground">
+                      {req.status}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {sponsorRequests.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-8">No sponsor requests found.</TableCell></TableRow>}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   return (
     <div className="flex h-screen bg-background">
       <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} />
@@ -1293,6 +1336,7 @@ export default function AdminDashboard() {
         {activeTab === 'registrations' && renderRegistrations()}
         {activeTab === 'qr-logs' && renderQRLogs()}
         {activeTab === 'voting' && renderContestants()}
+        {activeTab === 'sponsors' && renderSponsorRequests()}
         {activeTab === 'managers' && renderManagers()}
         {activeTab === 'settings' && renderSettings()}
       </main>
@@ -1498,6 +1542,21 @@ export default function AdminDashboard() {
               <div className="space-y-2">
                 <Label>Team Name</Label>
                 <Input value={editingUser?.teamName || ''} onChange={e => setEditingUser({ ...editingUser, teamName: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <Label>Team Type</Label>
+                <Select
+                  value={editingUser?.teamType || 'Solo'}
+                  onValueChange={v => setEditingUser({ ...editingUser, teamType: v })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Solo">Solo</SelectItem>
+                    <SelectItem value="Team of 2">Team of 2</SelectItem>
+                    <SelectItem value="Team of 3">Team of 3</SelectItem>
+                    <SelectItem value="Team of 4">Team of 4</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="space-y-2">

@@ -15,11 +15,9 @@ export const participantSchema = z.object({
 
     // Project Details
     category: z.enum(['Web Development', 'App Development', 'Software', 'VFX', '3D', 'Animation', 'Film', 'Product', 'Startup', 'Other']),
-    projectTitle: z.string().min(3, 'Project title is required'),
-    projectDescription: z.string().min(10, 'Project description must be at least 10 characters'),
-    projectLinks: z.string().url('Invalid URL').optional().or(z.literal('')),
-
-    skillVerification: z.boolean().refine(val => val === true, 'You must verify your skills'),
+    projectTitle: z.string().min(1, 'Project title is required'),
+    projectDescription: z.string().min(1, 'Project description is required'),
+    projectLinks: z.string().optional().or(z.literal('')),
 
     // Coupon
     couponCode: z.string().optional()

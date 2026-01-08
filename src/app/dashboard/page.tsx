@@ -16,6 +16,14 @@ import { PitchCard } from '@/components/pitch-card';
 import { LiveVotingPanel } from '@/components/LiveVotingPanel';
 import { Logo } from '@/components/logo';
 import { safeLocalStorage } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { Toaster } from '@/components/ui/toaster';
+
+declare global {
+    interface Window {
+        Razorpay: any;
+    }
+}
 
 export default function UserDashboard() {
     const router = useRouter();
@@ -25,8 +33,116 @@ export default function UserDashboard() {
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [formData, setFormData] = useState<any>({});
     const [updating, setUpdating] = useState(false);
+    const { toast } = useToast();
 
     const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+
+    // Load Razorpay Script
+    useEffect(() => {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.body.appendChild(script);
+        return () => {
+            // cleanup if needed
+        };
+    }, []);
+
+    const handlePayment = async () => {
+        if (!user) return;
+
+        // Default or fetched price
+        const amountToPay = user.ticketPrice || 1800; // Fallback if ticket fetch fails
+
+        try {
+            // Create Order
+            const orderRes = await fetch('/api/payment/create-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    amount: amountToPay,
+                    currency: 'INR',
+                    receipt: `receipt_${user._id}`
+                }),
+            });
+
+            const orderData = await orderRes.json();
+
+            if (!orderData.success) {
+                toast({
+                    title: "Payment Error",
+                    description: "Could not create payment order. Please try again.",
+                    variant: "destructive"
+                });
+                return;
+            }
+
+            // Open Razorpay
+            const options = {
+                key: orderData.key,
+                amount: orderData.amount,
+                currency: orderData.currency,
+                name: "Behind The Build",
+                description: "Event Registration Payment",
+                order_id: orderData.orderId,
+                handler: async function (response: any) {
+                    // Verify Payment
+                    const verifyRes = await fetch('/api/payment/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                            userId: user._id
+                        }),
+                    });
+
+                    const verifyData = await verifyRes.json();
+                    if (verifyData.success) {
+                        toast({
+                            title: "Payment Successful!",
+                            description: "Your registration is now complete.",
+                        });
+                        // Refresh user data
+                        fetchUser();
+                    } else {
+                        toast({
+                            title: "Payment verification failed",
+                            description: verifyData.message,
+                            variant: "destructive"
+                        });
+                    }
+                },
+                prefill: {
+                    name: user.name || '',
+                    email: user.email || '',
+                    contact: user.phone || ''
+                },
+                theme: {
+                    color: "#3399cc"
+                }
+            };
+
+            const rzp1 = new window.Razorpay(options);
+            rzp1.on('payment.failed', function (response: any) {
+                toast({
+                    title: "Payment Failed",
+                    description: response.error.description,
+                    variant: "destructive"
+                });
+            });
+            rzp1.open();
+
+        } catch (error) {
+            console.error(error);
+            toast({
+                title: "Error",
+                description: "Something went wrong initializing payment.",
+                variant: "destructive"
+            });
+        }
+    };
 
     useEffect(() => {
         fetchUser();
@@ -136,6 +252,17 @@ export default function UserDashboard() {
             </header>
 
             <main className="container mx-auto px-4 py-8 space-y-6">
+                {user.paymentStatus === 'Pending' && (
+                    <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4 flex justify-between items-center" role="alert">
+                        <div>
+                            <p className="font-bold">Registration Incomplete</p>
+                            <p>Your payment is pending. Please complete payment to confirm your registration.</p>
+                        </div>
+                        <Button onClick={handlePayment} variant="default" className="bg-yellow-600 hover:bg-yellow-700 text-white">
+                            Pay Now
+                        </Button>
+                    </div>
+                )}
                 <div className="flex justify-between items-center">
                     <h1 className="text-3xl font-bold">My Profile</h1>
                     <Button onClick={() => setIsEditOpen(true)}>
@@ -249,21 +376,27 @@ export default function UserDashboard() {
                                         </div>
                                         <div>
                                             <Label className="text-muted-foreground">QR Code Status</Label>
-                                            <div className={`mt-1 font-bold ${user.ticketStatus === 'Used' ? 'text-green-600' : 'text-blue-600'}`}>
-                                                {user.ticketStatus === 'Used' ? 'Scanned Successfully' : 'Ready to Scan'}
-                                            </div>
+                                            {user.paymentStatus === 'Completed' ? (
+                                                <>
+                                                    <div className={`mt-1 font-bold ${user.ticketStatus === 'Used' ? 'text-green-600' : 'text-blue-600'}`}>
+                                                        {user.ticketStatus === 'Used' ? 'Scanned Successfully' : 'Ready to Scan'}
+                                                    </div>
 
-                                            {user.qrCode ? (
-                                                <div className="mt-2">
-                                                    <img
-                                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(user.qrCode)}`}
-                                                        alt="Participant QR Code"
-                                                        className="w-32 h-32 border rounded-lg"
-                                                    />
-                                                    <p className="text-xs text-muted-foreground mt-1 font-mono">{user.qrCode}</p>
-                                                </div>
+                                                    {user.qrCode ? (
+                                                        <div className="mt-2">
+                                                            <img
+                                                                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(user.qrCode)}`}
+                                                                alt="Participant QR Code"
+                                                                className="w-32 h-32 border rounded-lg"
+                                                            />
+                                                            <p className="text-xs text-muted-foreground mt-1 font-mono">{user.qrCode}</p>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="mt-1 text-sm text-gray-500">Generated after payment verification</div>
+                                                    )}
+                                                </>
                                             ) : (
-                                                <div className="mt-1 text-sm text-gray-500">Generated after payment verification</div>
+                                                <div className="mt-1 text-sm text-yellow-600 font-medium">Complete payment to view QR Ticket</div>
                                             )}
                                         </div>
                                     </div>
@@ -343,6 +476,7 @@ export default function UserDashboard() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+            <Toaster />
         </div>
     );
 }

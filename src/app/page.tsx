@@ -43,7 +43,7 @@ export default function Home() {
       title: "Get Scouted",
       description: "Get scouted by top HR agencies and talent managers.",
     },
-     {
+    {
       icon: <Zap className="w-10 h-10 text-glow-start" />,
       title: "Your Own Episode",
       description: "Your performance will be professionally recorded and streamed online.",
@@ -59,11 +59,11 @@ export default function Home() {
     <div className="flex flex-col min-h-screen bg-background text-foreground overflow-x-hidden">
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative text-center py-24 md:py-32 px-4 spotlight-effect">
-           <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-           <div className="container mx-auto relative z-10">
+        <section className="relative text-center py-32 md:py-32 px-4 spotlight-effect">
+          <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+          <div className="container mx-auto relative z-10">
             <h1 className="text-4xl md:text-6xl font-bold tracking-widest uppercase text-primary mb-4 animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
-                BEHIND THE BUILD <span className='font-light text-muted-foreground'>by GWD</span>
+              BEHIND THE BUILD <span className='font-light text-muted-foreground'>by GWD</span>
             </h1>
             <h2 className="text-2xl md:text-4xl font-black mb-4 leading-tight tracking-tighter animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
               Where Innovators Take the Stage.
@@ -85,7 +85,7 @@ export default function Home() {
             </div>
           </div>
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background to-transparent text-center">
-             <p className="text-sm text-primary animate-pulse">Applications closing soon — Be part of India’s most anticipated innovation showcase!</p>
+            <p className="text-sm text-primary animate-pulse">Applications closing soon — Be part of India’s most anticipated innovation showcase!</p>
           </div>
         </section>
 
@@ -107,7 +107,7 @@ export default function Home() {
                 data-ai-hint="stage event"
                 className="opacity-70"
               />
-               <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent"></div>
+              <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent"></div>
             </div>
           </div>
         </section>
@@ -133,14 +133,14 @@ export default function Home() {
         {/* Collaboration Section */}
         <section id="partner" className="py-20 px-4">
           <div className="container mx-auto text-center">
-            <h2 className="text-4xl font-bold mb-4">25+ Colleges. 1000+ Participants. <br/> One Grand Stage.</h2>
+            <h2 className="text-4xl font-bold mb-4">25+ Colleges. 1000+ Participants. <br /> One Grand Stage.</h2>
             <p className="max-w-3xl mx-auto text-lg text-muted-foreground mb-12">
-               GWD Global collaborates with top college clubs and creative communities to organize shortlisting events under our operational team’s guidance. College clubs receive mentorship, visibility, and opportunities to volunteer in the final event.
+              GWD Global collaborates with top college clubs and creative communities to organize shortlisting events under our operational team’s guidance. College clubs receive mentorship, visibility, and opportunities to volunteer in the final event.
             </p>
-             <div className="flex flex-wrap justify-center items-center gap-8 opacity-50">
-                {[...Array(6)].map((_, i) => (
-                    <div key={i} className="font-bold text-lg text-muted-foreground">College Logo</div>
-                ))}
+            <div className="flex flex-wrap justify-center items-center gap-8 opacity-50">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="font-bold text-lg text-muted-foreground">College Logo</div>
+              ))}
             </div>
           </div>
         </section>
@@ -167,13 +167,13 @@ export default function Home() {
             </div>
           </div>
         </section>
-        
+
         {/* CTA Section */}
         <section className="py-24 px-4 text-center">
           <div className="container mx-auto">
             <h2 className="text-5xl font-black mb-8">Are You Ready to Be Seen?</h2>
             <div className="flex justify-center gap-4">
-               <Button asChild size="lg" className="glow-border bg-primary/10 hover:bg-primary/20 text-white">
+              <Button asChild size="lg" className="glow-border bg-primary/10 hover:bg-primary/20 text-white">
                 <Link href="/register">Join the Event</Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="bg-secondary/50">

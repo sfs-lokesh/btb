@@ -30,6 +30,7 @@ export async function GET(req: NextRequest) {
         if (ticket) {
             userObj.ticketStatus = ticket.status;
             userObj.scannedAt = ticket.scannedAt;
+            userObj.ticketPrice = ticket.price;
         }
 
         return NextResponse.json({ user: userObj });

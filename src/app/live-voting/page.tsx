@@ -56,7 +56,7 @@ export default function LiveVotingPage() {
 
     return (
         <AuthGuard>
-            <div className="min-h-screen bg-background pt-16 px-4">
+            <div className="min-h-screen bg-background pt-32 px-4">
                 <div className="container mx-auto">
                     <h1 className="text-3xl font-bold text-center mb-2">Live Voting Event</h1>
                     <p className="text-center text-muted-foreground mb-8">Watch the pitch and cast your vote in real-time.</p>

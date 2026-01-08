@@ -1,8 +1,8 @@
 "use client";
 
-import { useContext, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetTitle } from "@/components/ui/sheet";
 import { Menu, LogOut } from 'lucide-react';
 import { Logo } from '@/components/logo';
 import { Button } from '@/components/ui/button';
@@ -50,9 +50,11 @@ export function Header() {
     { name: "Stall Bookings", href: "/stalls" },
   ];
 
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <header className="fixed top-0 z-50 w-full p-4 pointer-events-none">
-      <div className="container mx-auto flex items-center justify-between pointer-events-auto bg-background/80 backdrop-blur-md border rounded-full shadow-md">
+    <header className="fixed top-0 z-50 w-full p-1 pointer-events-none">
+      <div className="container mx-auto flex h-14 items-center justify-between pointer-events-auto bg-background/80 backdrop-blur-md border rounded-full shadow-md px-4 ">
         <Link href="/" className="flex items-center gap-4">
           <Logo />
         </Link>
@@ -68,26 +70,32 @@ export function Header() {
 
         <div className="flex items-center gap-2">
           {/* Mobile Menu */}
-          <Sheet>
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="lg:hidden">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right">
+              <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
               <div className="flex flex-col gap-4 mt-8">
                 {navLinks.map(link => (
-                  <Link key={link.href} href={link.href} className="text-lg font-medium hover:text-primary transition-colors">
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setIsOpen(false)}
+                    className="text-lg font-medium hover:text-primary transition-colors"
+                  >
                     {link.name}
                   </Link>
                 ))}
                 {isUserAuthenticated ? (
-                  <Button onClick={handleLogout} variant="ghost" className="justify-start px-0">
+                  <Button onClick={() => { handleLogout(); setIsOpen(false); }} variant="ghost" className="justify-start px-0">
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
                   </Button>
                 ) : (
-                  <Button asChild className="w-full">
+                  <Button asChild className="w-full" onClick={() => setIsOpen(false)}>
                     <Link href="/login">Login</Link>
                   </Button>
                 )}

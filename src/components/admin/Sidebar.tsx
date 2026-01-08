@@ -29,6 +29,7 @@ export function AdminSidebar({ activeTab, setActiveTab, onLogout }: SidebarProps
         { id: 'stalls', label: 'Stall Bookings', icon: Store },
         { id: 'registrations', label: 'Registrations', icon: GraduationCap },
         { id: 'voting', label: 'Live Voting', icon: Vote },
+        { id: 'sponsors', label: 'Sponsors', icon: Users },
         { id: 'managers', label: 'Managers', icon: Users },
         { id: 'qr-logs', label: 'QR Scan Logs', icon: QrCode },
         { id: 'settings', label: 'Settings', icon: Settings },

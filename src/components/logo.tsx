@@ -2,7 +2,7 @@ import Image from 'next/image';
 
 export function Logo() {
   return (
-    <div className="w-24 h-auto">
+    <div className="w-20 h-auto">
       <Image
 
         src="/logo.png"
