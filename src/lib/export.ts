@@ -1,5 +1,5 @@
 import { Parser } from 'json2csv';
-import ExcelJS from 'exceljs';
+// import ExcelJS from 'exceljs';
 
 /**
  * Convert data to CSV format
@@ -25,6 +25,8 @@ export function exportToCSV(data: any[], fields?: string[]): string {
 export async function exportToExcel(
     sheetsData: { [sheetName: string]: any[] }
 ): Promise<Buffer> {
+    const ExcelJS = (await import('exceljs')).default;
+
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'Behind The Build';
     workbook.created = new Date();

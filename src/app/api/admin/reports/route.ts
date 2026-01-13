@@ -7,6 +7,8 @@ import { exportToCSV, exportToExcel } from '@/lib/export';
 
 import { requireAuth, ROLES } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
     await dbConnect();
     try {

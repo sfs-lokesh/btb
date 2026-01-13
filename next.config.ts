@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  serverExternalPackages: ['exceljs'],
   // eslint: {
   //   ignoreDuringBuilds: true,
   // },
