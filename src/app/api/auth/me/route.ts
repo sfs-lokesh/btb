@@ -62,10 +62,16 @@ export async function PATCH(req: NextRequest) {
             const formData = await req.formData();
             const file = formData.get('profileImage') as File | null;
 
+            console.log('API: Received FormData');
+            console.log('API: File found:', file ? `${file.name} (${file.size} bytes, ${file.type})` : 'No file');
+
             if (file && file.size > 0) {
                 const bytes = await file.arrayBuffer();
                 updates.profileImage = Buffer.from(bytes);
                 updates.profileImageType = file.type;
+                console.log('API: Processed profile image buffer');
+            } else {
+                console.log('API: File is empty or missing');
             }
 
             formData.forEach((value, key) => {

@@ -18,6 +18,8 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
 
+    console.log('Upload API: Received file', file ? `${file.name} (${file.size} bytes)` : 'No file');
+
     if (!file) {
       return NextResponse.json({ success: false, error: 'No file uploaded.' }, { status: 400 });
     }

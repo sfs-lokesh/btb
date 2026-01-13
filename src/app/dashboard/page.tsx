@@ -220,11 +220,12 @@ export default function UserDashboard() {
                 setIsEditOpen(false);
                 alert('Profile updated successfully!');
             } else {
-                alert('Failed to update profile');
+                const errData = await res.json().catch(() => ({}));
+                alert(`Failed to update profile: ${errData.error || errData.message || 'Unknown error'}`);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error updating profile:', error);
-            alert('Network error');
+            alert(`Network error: ${error.message}`);
         } finally {
             setUpdating(false);
         }

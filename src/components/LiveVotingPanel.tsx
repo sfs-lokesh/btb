@@ -83,8 +83,8 @@ export function LiveVotingPanel() {
             <Card className="w-full max-w-4xl mx-auto my-8">
                 <CardContent className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
                     <Loader2 className="w-12 h-12 mb-4 animate-spin text-primary" />
-                    <h2 className="text-2xl font-semibold">Waiting for next contestant...</h2>
-                    <p>The admin has not activated a contestant yet. Please stay tuned.</p>
+                    <h2 className="text-2xl font-semibold">Voting has not started yet.</h2>
+                    <p>Please stay tuned for the next contestant.</p>
                 </CardContent>
             </Card>
         );
@@ -132,8 +132,8 @@ export function LiveVotingPanel() {
                         <button
                             onClick={() => setVoteSelection('up')}
                             className={`flex flex-col items-center gap-2 p-6 rounded-2xl border-2 transition-all ${voteSelection === 'up'
-                                    ? 'border-green-500 bg-green-50 dark:bg-green-900/20 scale-105 shadow-md'
-                                    : 'border-muted hover:border-green-200'
+                                ? 'border-green-500 bg-green-50 dark:bg-green-900/20 scale-105 shadow-md'
+                                : 'border-muted hover:border-green-200'
                                 }`}
                         >
                             <div className={`p-4 rounded-full ${voteSelection === 'up' ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
@@ -145,8 +145,8 @@ export function LiveVotingPanel() {
                         <button
                             onClick={() => setVoteSelection('down')}
                             className={`flex flex-col items-center gap-2 p-6 rounded-2xl border-2 transition-all ${voteSelection === 'down'
-                                    ? 'border-red-500 bg-red-50 dark:bg-red-900/20 scale-105 shadow-md'
-                                    : 'border-muted hover:border-red-200'
+                                ? 'border-red-500 bg-red-50 dark:bg-red-900/20 scale-105 shadow-md'
+                                : 'border-muted hover:border-red-200'
                                 }`}
                         >
                             <div className={`p-4 rounded-full ${voteSelection === 'down' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
