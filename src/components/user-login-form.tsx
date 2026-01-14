@@ -87,7 +87,12 @@ export function UserLoginForm() {
                 />
               </div>
               <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="password">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <Link href="/forgot-password" className="text-xs text-primary hover:underline">
+                    Forgot Password?
+                  </Link>
+                </div>
                 <Input
                   id="password"
                   type="password"
@@ -98,7 +103,11 @@ export function UserLoginForm() {
                   required
                 />
               </div>
-              {error && <p className="text-sm text-destructive text-center">{error}</p>}
+              {error && (
+                <div className="p-3 bg-destructive/15 border border-destructive/50 rounded-md">
+                  <p className="text-sm text-destructive text-center font-medium">{error}</p>
+                </div>
+              )}
             </div>
           </form>
         </CardContent>
@@ -106,9 +115,11 @@ export function UserLoginForm() {
           <Button className="w-full" onClick={handleSubmit} disabled={isLoading}>
             {isLoading ? 'Logging in...' : 'Login'}
           </Button>
-          <p className="text-xs text-muted-foreground">
-            Don't have an account? <Link href="/register" className="text-primary hover:underline">Register now</Link>
-          </p>
+          <div className="text-center text-xs text-muted-foreground space-y-2">
+            <p>
+              Don't have an account? <Link href="/register" className="text-primary hover:underline">Register now</Link>
+            </p>
+          </div>
         </CardFooter>
       </Card>
     </div>
