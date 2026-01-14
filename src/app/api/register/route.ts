@@ -9,6 +9,7 @@ import bcrypt from 'bcryptjs';
 import { participantSchema } from '@/lib/validation';
 import { sendRegistrationEmail } from '@/lib/email';
 import { PRICING } from '@/lib/constants';
+import Verification from '@/models/Verification';
 
 export async function POST(req: Request) {
     await dbConnect();
@@ -17,12 +18,11 @@ export async function POST(req: Request) {
         const body = await req.json();
         const {
             name, email, password, role, phone,
-            // Participant specific
             collegeId, couponCode, teamType, teamName, teamMembers,
             category, projectTitle, projectDescription, projectLinks, skillVerification,
-            // Sponsor/Delegate specific
             companyName, designation, tier
         } = body;
+
 
         // Check if user already exists
         const existingUser = await User.findOne({ email });
@@ -30,8 +30,17 @@ export async function POST(req: Request) {
             return NextResponse.json({ message: 'User already exists' }, { status: 400 });
         }
 
+        // --- NEW: VERIFICATION CHECK ---
+        const verificationRecord = await Verification.findOne({ email, verified: true });
+        if (!verificationRecord) {
+            return NextResponse.json({ message: 'Email not verified. Please verify your email first.' }, { status: 403 });
+        }
+        // -------------------------------
+
         let userData: any = {
             name,
+            emailVerified: true, // Set to true in User model
+            // ...
             email,
             password, // Will be hashed by pre-save hook
             role,

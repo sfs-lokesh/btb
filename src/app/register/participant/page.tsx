@@ -71,31 +71,77 @@ export default function ParticipantRegister() {
     const router = useRouter();
     const { toast } = useToast();
 
+    // OTP States
+    const [otpSent, setOtpSent] = useState(false);
+    const [otpVerified, setOtpVerified] = useState(false);
+    const [otp, setOtp] = useState('');
+    const [verifyingOtp, setVerifyingOtp] = useState(false);
+
     // Load Razorpay Script
-    useEffect(() => {
-        const script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        script.async = true;
-        document.body.appendChild(script);
-        return () => {
-            document.body.removeChild(script);
-        };
-    }, []);
+    // ... (rest of useEffects)
+
+    const sendOtp = async () => {
+        const email = watch('email');
+        const emailValid = await trigger('email');
+        if (!emailValid || !email) {
+            toast({ title: "Invalid Email", description: "Please enter a valid email first.", variant: "destructive" });
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const res = await fetch('/api/auth/register/send-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setOtpSent(true);
+                toast({ title: "OTP Sent", description: "Please check your email for the OTP." });
+            } else {
+                toast({ title: "Error", description: data.error, variant: "destructive" });
+            }
+        } catch (error) {
+            toast({ title: "Error", description: "Failed to send OTP.", variant: "destructive" });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const verifyCode = async () => {
+        if (!otp || otp.length < 6) {
+            toast({ title: "Invalid OTP", description: "Please enter a 6-digit OTP.", variant: "destructive" });
+            return;
+        }
+        setVerifyingOtp(true);
+        try {
+            const email = watch('email');
+            const res = await fetch('/api/auth/register/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, otp }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setOtpVerified(true);
+                setOtpSent(false); // To hide OTP input and show verify success state
+                toast({ title: "Verified", description: "Email verified successfully." });
+            } else {
+                toast({ title: "Verification Failed", description: data.error, variant: "destructive" });
+            }
+        } catch (error) {
+            toast({ title: "Error", description: "Verification failed.", variant: "destructive" });
+        } finally {
+            setVerifyingOtp(false);
+        }
+    };
+
+    // ... existing effect ...
+
+    // ... inside return ...
 
 
-
-    const teamType = watch('teamType');
-    const selectedCollegeId = watch('collegeId');
-    const enteredCoupon = watch('couponCode');
-
-    useEffect(() => {
-        fetch('/api/admin/college')
-            .then(res => res.json())
-            .then(data => setColleges(data))
-            .catch(err => console.error('Failed to fetch colleges', err));
-    }, []);
-
-    // Update team members array based on team type
     useEffect(() => {
         let count = 0;
         if (teamType === 'Team of 2') count = 1; // +1 member (excluding lead)
@@ -352,6 +398,15 @@ export default function ParticipantRegister() {
                 }
                 return;
             }
+
+            if (!otpVerified) {
+                 toast({
+                    title: "Email not verified",
+                    description: "Please verify your email address to proceed.",
+                    variant: "destructive"
+                });
+                return;
+            }
         } else if (step === 2) {
             const f1 = await trigger('teamType');
             const f2 = teamType !== 'Solo' ? await trigger('teamName') : true;
@@ -426,18 +481,57 @@ export default function ParticipantRegister() {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-foreground">Email</label>
-                            <input
-                                {...register('email', {
-                                    required: 'Email is required',
-                                    pattern: {
-                                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                                        message: 'Invalid email address'
-                                    }
-                                })}
-                                className="w-full bg-secondary border-input text-foreground p-2 rounded border"
-                                type="email"
-                            />
+                            <div className="flex gap-2">
+                                <input
+                                    {...register('email', {
+                                        required: 'Email is required',
+                                        pattern: {
+                                            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                                            message: 'Invalid email address'
+                                        }
+                                    })}
+                                    className={`flex-1 bg-secondary border-input text-foreground p-2 rounded border ${otpVerified ? 'border-green-500' : ''}`}
+                                    type="email"
+                                    disabled={otpVerified}
+                                />
+                                {!otpVerified && (
+                                    <button
+                                        type="button"
+                                        onClick={sendOtp}
+                                        className="bg-primary text-primary-foreground px-4 py-2 rounded text-sm whitespace-nowrap"
+                                        disabled={loading || otpSent}
+                                    >
+                                        {loading ? 'Sending...' : (otpSent ? 'Resend OTP' : 'Verify Email')}
+                                    </button>
+                                )}
+                                {otpVerified && (
+                                    <span className="bg-green-100 text-green-700 px-4 py-2 rounded text-sm font-medium flex items-center">
+                                        Verified
+                                    </span>
+                                )}
+                            </div>
                             {errors.email && <span className="text-xs text-red-500">{errors.email.message}</span>}
+
+                            {otpSent && !otpVerified && (
+                                <div className="mt-2 flex gap-2">
+                                    <input
+                                        type="text"
+                                        placeholder="Enter OTP"
+                                        value={otp}
+                                        onChange={(e) => setOtp(e.target.value)}
+                                        className="flex-1 bg-secondary border-input text-foreground p-2 rounded border"
+                                        maxLength={6}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={verifyCode}
+                                        disabled={verifyingOtp}
+                                        className="bg-green-600 text-white px-4 py-2 rounded text-sm"
+                                    >
+                                        {verifyingOtp ? 'Checking...' : 'Submit OTP'}
+                                    </button>
+                                </div>
+                            )}
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-foreground">Password</label>

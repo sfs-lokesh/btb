@@ -82,8 +82,7 @@ export function LiveVotingPanel() {
         return (
             <Card className="w-full max-w-4xl mx-auto my-8">
                 <CardContent className="flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
-                    <Loader2 className="w-12 h-12 mb-4 animate-spin text-primary" />
-                    <h2 className="text-2xl font-semibold">Voting has not started yet.</h2>
+                    <h2 className="text-2xl font-bold mb-2">Voting has not started yet.</h2>
                     <p>Please stay tuned for the next contestant.</p>
                 </CardContent>
             </Card>

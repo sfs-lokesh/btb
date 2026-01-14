@@ -42,6 +42,11 @@ const UserSchema = new Schema({
   resetPasswordToken: { type: String },
   resetPasswordExpire: { type: Date },
 
+  // Email Verification
+  emailVerified: { type: Boolean, default: false },
+  otp: { type: String, select: false },
+  otpExpires: { type: Date, select: false },
+
 }, { timestamps: true });
 
 // Hash password before saving

@@ -334,3 +334,44 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string): P
         return false;
     }
 }
+
+/**
+ * Send OTP verification email
+ */
+export async function sendOtpEmail(email: string, otp: string): Promise<boolean> {
+    try {
+        const transporter = getTransporter();
+        if (!transporter) return false;
+
+        const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .otp-box { font-size: 24px; font-weight: bold; letter-spacing: 5px; background: #eee; padding: 15px; text-align: center; border-radius: 5px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h2>Email Verification</h2>
+    <p>Please use the following One-Time Password (OTP) to verify your email address:</p>
+    <div class="otp-box">${otp}</div>
+    <p>This code will expire in 10 minutes.</p>
+    <p>If you didn't request this, please ignore this email.</p>
+</body>
+</html>
+        `;
+
+        await transporter.sendMail({
+            from: EMAIL_FROM,
+            to: email,
+            subject: 'Verify Your Email - Behind The Build',
+            html: htmlContent
+        });
+
+        return true;
+    } catch (error) {
+        console.error('Error sending OTP email:', error);
+        return false;
+    }
+}
