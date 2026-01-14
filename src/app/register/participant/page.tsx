@@ -77,6 +77,10 @@ export default function ParticipantRegister() {
     const [otp, setOtp] = useState('');
     const [verifyingOtp, setVerifyingOtp] = useState(false);
 
+    const teamType = watch('teamType');
+    const selectedCollegeId = watch('collegeId');
+    const enteredCoupon = watch('couponCode');
+
     // Load Razorpay Script
     // ... (rest of useEffects)
 
@@ -400,7 +404,7 @@ export default function ParticipantRegister() {
             }
 
             if (!otpVerified) {
-                 toast({
+                toast({
                     title: "Email not verified",
                     description: "Please verify your email address to proceed.",
                     variant: "destructive"
