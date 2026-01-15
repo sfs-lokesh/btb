@@ -1284,7 +1284,9 @@ export default function AdminDashboard() {
         <CardContent className="p-0">
           <Table>
             <TableHeader>
+
               <TableRow>
+                <TableHead>Logo</TableHead>
                 <TableHead>Business Name</TableHead>
                 <TableHead>Contact Person</TableHead>
                 <TableHead>Email</TableHead>
@@ -1296,8 +1298,16 @@ export default function AdminDashboard() {
             <TableBody>
               {sponsorRequests.map((req: any) => (
                 <TableRow key={req._id}>
+                  <TableCell>
+                    {req.logo ? (
+                      <img src={req.logo} alt="logo" className="w-10 h-10 object-contain border rounded bg-white" />
+                    ) : (
+                      <div className="w-10 h-10 border rounded bg-gray-50 flex items-center justify-center text-[10px] text-gray-400">No Logo</div>
+                    )}
+                  </TableCell>
                   <TableCell className="font-bold">{req.businessName}</TableCell>
                   <TableCell>{req.name}</TableCell>
+
                   <TableCell>{req.email}</TableCell>
                   <TableCell>{req.phone}</TableCell>
                   <TableCell>{new Date(req.createdAt).toLocaleDateString()}</TableCell>

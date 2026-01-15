@@ -13,13 +13,23 @@ export async function GET(req: NextRequest) {
     // Frontend can know if it voted by checking its own local state or better: 
     // Return Contestant + hasVoted boolean if user token provided?
 
+
     try {
         const active = await Contestant.findOne({ isActive: true });
-        return NextResponse.json(active);
+        if (active) {
+            const obj = active.toObject();
+            if (active.imageBuffer && active.imageType && !active.image) {
+                obj.image = `data:${active.imageType};base64,${active.imageBuffer.toString('base64')}`;
+            }
+            delete obj.imageBuffer;
+            return NextResponse.json(obj);
+        }
+        return NextResponse.json(null);
     } catch (e: any) {
         return NextResponse.json({ error: e.message }, { status: 500 });
     }
 }
+
 
 export async function POST(req: NextRequest) { // Cast Vote
     await dbConnect();

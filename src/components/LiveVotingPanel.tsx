@@ -20,16 +20,18 @@ export function LiveVotingPanel() {
         const fetchActive = async () => {
             try {
                 const res = await fetch('/api/voting');
+
                 if (res.ok) {
                     const data = await res.json();
                     // Detect if contestant changed to reset local selection if needed
                     setActiveContestant((prev: any) => {
-                        if (!prev || prev._id !== data._id) {
+                        if (data && (!prev || prev._id !== data._id)) {
                             setVoteSelection(null); // Reset selection for new contestant
                         }
                         return data;
                     });
                 } else {
+
                     setActiveContestant(null);
                 }
             } catch (error) {

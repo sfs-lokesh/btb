@@ -1,12 +1,15 @@
 
 import mongoose, { Schema, Document } from 'mongoose';
 
+
 export interface ISponsorRequest extends Document {
     name: string;
     businessName: string;
     email: string;
     phone: string;
     status: 'Pending' | 'Contacted' | 'Closed';
+    logoBuffer?: Buffer;
+    logoType?: string;
     createdAt: Date;
 }
 
@@ -16,7 +19,10 @@ const SponsorRequestSchema: Schema = new Schema({
     email: { type: String, required: true },
     phone: { type: String, required: true },
     status: { type: String, enum: ['Pending', 'Contacted', 'Closed'], default: 'Pending' },
+    logoBuffer: { type: Buffer },
+    logoType: { type: String },
     createdAt: { type: Date, default: Date.now },
 });
+
 
 export default mongoose.models.SponsorRequest || mongoose.model<ISponsorRequest>('SponsorRequest', SponsorRequestSchema);

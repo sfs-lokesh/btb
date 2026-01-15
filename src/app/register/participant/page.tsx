@@ -81,6 +81,25 @@ export default function ParticipantRegister() {
     const selectedCollegeId = watch('collegeId');
     const enteredCoupon = watch('couponCode');
 
+
+    // Load Colleges
+    useEffect(() => {
+        const fetchColleges = async () => {
+
+            try {
+                const res = await fetch('/api/admin/college', { cache: 'no-store' });
+                if (res.ok) {
+
+                    const data = await res.json();
+                    setColleges(data);
+                }
+            } catch (err) {
+                console.error('Failed to fetch colleges', err);
+            }
+        };
+        fetchColleges();
+    }, []);
+
     // Load Razorpay Script
     // ... (rest of useEffects)
 

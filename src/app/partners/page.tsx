@@ -40,17 +40,28 @@ export default function PartnersPage() {
   ];
 
   /* Form Logic */
+
+  /* Form Logic */
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
   const [loading, setLoading] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const { toast } = useToast();
 
   const onSubmit = async (data: any) => {
     setLoading(true);
     try {
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('businessName', data.businessName);
+      formData.append('email', data.email);
+      formData.append('phone', data.phone);
+      if (logoFile) {
+        formData.append('logo', logoFile);
+      }
+
       const res = await fetch('/api/contact/sponsor', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: formData,
       });
 
       const result = await res.json();
@@ -61,6 +72,7 @@ export default function PartnersPage() {
           description: "Thank you for your interest. We will contact you shortly.",
         });
         reset();
+        setLogoFile(null);
       } else {
         toast({
           title: "Submission Failed",
@@ -79,6 +91,7 @@ export default function PartnersPage() {
       setLoading(false);
     }
   };
+
 
   return (
     <main className="flex-1 bg-background text-foreground">
@@ -166,6 +179,7 @@ export default function PartnersPage() {
                       {errors.email && <p className="text-xs text-red-500">{errors.email.message as string}</p>}
                     </div>
 
+
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone</Label>
                       <div className="relative">
@@ -184,6 +198,18 @@ export default function PartnersPage() {
                       {errors.phone && <p className="text-xs text-red-500">{errors.phone.message as string}</p>}
                     </div>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="logo">Company Logo (Optional)</Label>
+                    <Input
+                      id="logo"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
+                      className="bg-background/50"
+                    />
+                  </div>
+
 
                   <Button type="submit" disabled={loading} className="w-full font-semibold shadow-lg transition-all duration-300">
                     {loading ? (
