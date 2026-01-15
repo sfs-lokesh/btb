@@ -502,9 +502,10 @@ export default function ParticipantRegister() {
                                 {errors.phone && <span className="text-xs text-red-500">{errors.phone.message}</span>}
                             </div>
                         </div>
+
                         <div>
                             <label className="block text-sm font-medium text-foreground">Email</label>
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap sm:flex-nowrap gap-2">
                                 <input
                                     {...register('email', {
                                         required: 'Email is required',
@@ -513,7 +514,7 @@ export default function ParticipantRegister() {
                                             message: 'Invalid email address'
                                         }
                                     })}
-                                    className={`flex-1 bg-secondary border-input text-foreground p-2 rounded border ${otpVerified ? 'border-green-500' : ''}`}
+                                    className={`flex-1 min-w-[200px] bg-secondary border-input text-foreground p-2 rounded border ${otpVerified ? 'border-green-500' : ''}`}
                                     type="email"
                                     disabled={otpVerified}
                                 />
@@ -521,14 +522,14 @@ export default function ParticipantRegister() {
                                     <button
                                         type="button"
                                         onClick={sendOtp}
-                                        className="bg-primary text-primary-foreground px-4 py-2 rounded text-sm whitespace-nowrap"
+                                        className="bg-primary text-primary-foreground px-4 py-2 rounded text-sm whitespace-nowrap flex-shrink-0"
                                         disabled={loading || otpSent}
                                     >
                                         {loading ? 'Sending...' : (otpSent ? 'Resend OTP' : 'Verify Email')}
                                     </button>
                                 )}
                                 {otpVerified && (
-                                    <span className="bg-green-100 text-green-700 px-4 py-2 rounded text-sm font-medium flex items-center">
+                                    <span className="bg-green-100 text-green-700 px-4 py-2 rounded text-sm font-medium flex items-center flex-shrink-0">
                                         Verified
                                     </span>
                                 )}
@@ -536,26 +537,27 @@ export default function ParticipantRegister() {
                             {errors.email && <span className="text-xs text-red-500">{errors.email.message}</span>}
 
                             {otpSent && !otpVerified && (
-                                <div className="mt-2 flex gap-2">
+                                <div className="mt-2 flex flex-wrap sm:flex-nowrap gap-2">
                                     <input
                                         type="text"
                                         placeholder="Enter OTP"
                                         value={otp}
                                         onChange={(e) => setOtp(e.target.value)}
-                                        className="flex-1 bg-secondary border-input text-foreground p-2 rounded border"
+                                        className="flex-1 min-w-[120px] bg-secondary border-input text-foreground p-2 rounded border"
                                         maxLength={6}
                                     />
                                     <button
                                         type="button"
                                         onClick={verifyCode}
                                         disabled={verifyingOtp}
-                                        className="bg-green-600 text-white px-4 py-2 rounded text-sm"
+                                        className="bg-green-600 text-white px-4 py-2 rounded text-sm whitespace-nowrap flex-shrink-0"
                                     >
                                         {verifyingOtp ? 'Checking...' : 'Submit OTP'}
                                     </button>
                                 </div>
                             )}
                         </div>
+
                         <div>
                             <label className="block text-sm font-medium text-foreground">Password</label>
                             <input {...register('password', { required: true, minLength: 6 })} className="w-full bg-secondary border-input text-foreground p-2 rounded border" type="password" />

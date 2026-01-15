@@ -23,10 +23,12 @@ export async function GET(req: NextRequest) {
         let data: any[] = [];
         let filename = 'report';
 
+
         if (type === 'master') {
-            data = await User.find({}).populate('collegeId').lean();
+            data = await User.find({}).sort({ createdAt: -1 }).populate('collegeId').lean();
             filename = 'master-report';
-        } else if (type === 'college') {
+        }
+        else if (type === 'college') {
             if (!collegeId) {
                 // Return summary of all colleges
                 data = await College.find({}).lean();

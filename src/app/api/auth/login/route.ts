@@ -36,13 +36,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check Payment Status for Participants - RELAXED: Allow login to pay later
-    // if (user.role === 'Participant' && user.paymentStatus !== 'Completed') {
-    //   return NextResponse.json(
-    //     { error: 'Registration incomplete. Payment not verifiable.' },
-    //     { status: 403 }
-    //   );
-    // }
+
+    // Check Payment Status for Participants - Enforce payment before login
+    if (user.role === 'Participant' && user.paymentStatus !== 'Completed') {
+      return NextResponse.json(
+        { error: 'Registration incomplete. Please complete your payment first.' },
+        { status: 403 }
+      );
+    }
+
 
     // Generate JWT token
     const token = generateToken({

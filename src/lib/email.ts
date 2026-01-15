@@ -160,18 +160,20 @@ export async function sendRegistrationEmail(data: RegistrationEmailData): Promis
                 <span class="label">Ticket ID:</span>
                 <span>${data.ticketId}</span>
             </div>
+
             ${data.finalPrice !== undefined ? `
             <div class="info-row">
                 <span class="label">Amount Paid:</span>
-                <span>₹${data.finalPrice}</span>
+                <span>INR ${data.finalPrice}</span>
             </div>
             ` : ''}
             ${data.discount ? `
             <div class="info-row">
                 <span class="label">Discount Applied:</span>
-                <span>₹${data.discount} (${data.couponType})</span>
+                <span>INR ${data.discount} (${data.couponType})</span>
             </div>
             ` : ''}
+
         </div>
         
         <div class="qr-section">

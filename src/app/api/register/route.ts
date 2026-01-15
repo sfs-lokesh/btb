@@ -114,14 +114,17 @@ export async function POST(req: Request) {
                             }, { status: 400 });
                         }
 
+
                         discount = influencerCoupon.discountAmount;
                         appliedCoupon = couponCode;
                         couponType = 'Influencer';
                         userData.couponUsed = couponCode;
 
-                        // Increment usage count
-                        influencerCoupon.usedCount += 1;
-                        await influencerCoupon.save();
+                        // Increment usage count ONLY if price is 0
+                        if (ticketPrice - discount <= 0) {
+                            influencerCoupon.usedCount += 1;
+                            await influencerCoupon.save();
+                        }
                     } else {
                         return NextResponse.json({
                             message: 'Invalid coupon code'
@@ -132,19 +135,17 @@ export async function POST(req: Request) {
 
             finalPrice = ticketPrice - discount;
 
-            // Update college earnings logic
-            if (collegeId) {
+            // Update college earnings logic ONLY if price is 0
+            if (collegeId && finalPrice <= 0) {
                 const college = await College.findById(collegeId);
                 if (college) {
-                    // If coupon was used (either college or influencer), college earns 0
-                    // If no coupon, college earns commission
                     const collegeEarning = appliedCoupon ? 0 : PRICING.COLLEGE_COMMISSION;
-
                     college.earnings = (college.earnings || 0) + collegeEarning;
                     college.registrations = (college.registrations || 0) + 1;
                     await college.save();
                 }
             }
+
 
         } else if (role === 'Delegate') {
             finalPrice = 0; // Delegates typically get free entry
@@ -175,27 +176,37 @@ export async function POST(req: Request) {
                 qrCodeData: qrCodeData,
             });
 
+
             // Update user with QR code
             newUser.qrCode = ticket.qrCodeData;
-            newUser.paymentStatus = 'Pending';
+            newUser.paymentStatus = (finalPrice === 0) ? 'Completed' : 'Pending';
             await newUser.save();
+
+
 
             // Update response with qrCode and paymentStatus
             userResponse.qrCode = ticket.qrCodeData;
-            userResponse.paymentStatus = 'Pending';
+            userResponse.paymentStatus = newUser.paymentStatus;
 
-            // Send confirmation email
-            await sendRegistrationEmail({
-                name: newUser.name,
-                email: newUser.email,
-                role: newUser.role,
-                ticketId: ticket.qrCodeData, // Use SCAN ID for display
-                userId: newUser._id.toString(),
-                qrCodeData: ticket.qrCodeData,
-                finalPrice,
-                discount,
-                couponType: couponType || undefined
-            });
+
+
+            // Send confirmation email ONLY if payment is already complete (price 0)
+            if (finalPrice === 0) {
+                await sendRegistrationEmail({
+                    name: newUser.name,
+                    email: newUser.email,
+                    role: newUser.role,
+                    ticketId: ticket.qrCodeData, // Use SCAN ID for display
+                    userId: newUser._id.toString(),
+                    qrCodeData: ticket.qrCodeData,
+                    finalPrice,
+                    discount,
+                    couponType: couponType || undefined
+                });
+            } else {
+                console.log(`Payment pending for ${newUser.email}. Email will be sent after verification.`);
+            }
+
         }
 
         if (role === 'Sponsor') {

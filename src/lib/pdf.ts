@@ -43,9 +43,11 @@ export async function generateTicketPDF(data: TicketData): Promise<Buffer> {
     doc.text(`Role: ${data.role}`, 20, 85);
     doc.text(`Ticket ID: ${data.ticketId}`, 20, 95);
 
+
     if (data.price !== undefined) {
-        doc.text(`Price Paid: ₹${data.price}`, 20, 105);
+        doc.text(`Price Paid: INR ${data.price}`, 20, 105);
     }
+
 
     // QR Code
     // jsPDF addImage supports Data URL
