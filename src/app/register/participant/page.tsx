@@ -245,6 +245,7 @@ export default function ParticipantRegister() {
     };
 
 
+
     const initializePayment = async (userData: any, ticketData: any) => {
         // If price is 0, no payment needed
         if (ticketData.price === 0) {
@@ -260,6 +261,25 @@ export default function ParticipantRegister() {
             }
             return;
         }
+
+        // Wait for Razorpay script to load if it hasn't already
+        if (typeof window.Razorpay === 'undefined') {
+            // Simple retry mechanism
+            let retries = 0;
+            while (typeof window.Razorpay === 'undefined' && retries < 10) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                retries++;
+            }
+            if (typeof window.Razorpay === 'undefined') {
+                toast({
+                    title: "Payment Gateway Error",
+                    description: "Razorpay SDK failed to load. Please check your internet connection.",
+                    variant: "destructive"
+                });
+                return;
+            }
+        }
+
 
         // Create Order
         const orderRes = await fetch('/api/payment/create-order', {

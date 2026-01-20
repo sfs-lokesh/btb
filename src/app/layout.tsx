@@ -34,6 +34,7 @@ export default function RootLayout({
 
   return (
     <html lang="en" className="dark">
+
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -45,7 +46,10 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap"
           rel="stylesheet"
         />
+        {/* Razorpay Script */}
+        <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
       </head>
+
       <body className="font-body antialiased bg-background" suppressHydrationWarning>
         <PitchProvider>
           <Suspense fallback={null}>
