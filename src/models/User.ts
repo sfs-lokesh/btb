@@ -38,7 +38,7 @@ const UserSchema = new Schema({
   profileImage: { type: Buffer },
   profileImageType: { type: String },
 
-  // Password Reset
+  // Password reset
   resetPasswordToken: { type: String },
   resetPasswordExpire: { type: Date },
 
